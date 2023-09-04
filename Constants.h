@@ -4,6 +4,7 @@
 using namespace std;
 namespace Constants {
 	// Todo: make game board
+	
 
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
