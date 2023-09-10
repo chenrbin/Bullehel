@@ -5,14 +5,70 @@ using namespace std;
 using namespace Constants;
 class Player {
 	SfCircleAtHome hitbox;
+	sf::Sprite playerSprite;
+	sf::FloatRect movementBounds;
+	float moveSpeed, hitboxRadius;
+	bool focused;
+
 public:
-	Player() {
-		hitbox = SfCircleAtHome(RED, PLAYERHITBOXRADIUS, { 800, 800 }, true);
+	Player(float moveSpeed, float hitboxRadius, sf::Texture& texture) {
+		this->moveSpeed = moveSpeed;
+		this->hitboxRadius = hitboxRadius;
+		hitbox = SfCircleAtHome(WHITE, hitboxRadius, { 800, 800 }, true, RED, -2);
+		playerSprite.setTexture(texture);
+		playerSprite.setScale(0.5, 0.5);
+		sf::FloatRect bound = playerSprite.getLocalBounds();
+		playerSprite.setOrigin(bound.width / 2, bound.height / 2);
 	}
-	void move(float x = 0, float y = 0) {
-		hitbox.move(x, y);
+	void move(sf::Vector2f vec) {
+		hitbox.move(vec.x, vec.y);
+		if (getPosition().x < movementBounds.left)
+			hitbox.setPosition(movementBounds.left, getPosition().y);
+		else if (getPosition().x > movementBounds.left + movementBounds.width)
+			hitbox.setPosition(movementBounds.left + movementBounds.width, getPosition().y);
+		if (getPosition().y < movementBounds.top)
+			hitbox.setPosition(getPosition().x, movementBounds.top);
+		else if (getPosition().y > movementBounds.top + movementBounds.height)
+			hitbox.setPosition(getPosition().x, movementBounds.top + movementBounds.height);
+		playerSprite.setPosition(hitbox.getPosition());
 	}
-	void display(sf::RenderWindow& window) {
-		window.draw(hitbox);
+	// Check where to move based on current keyboard presses
+	void checkMovement(){
+		sf::Vector2f nextMove(0, 0);
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			nextMove.x -= moveSpeed;
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			nextMove.x += moveSpeed;
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			nextMove.y += moveSpeed;
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			nextMove.y -= moveSpeed;
+		if (nextMove.x != 0 && nextMove.y != 0)
+			nextMove *= float(sqrt(2) / 2);
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
+			focused = true;
+			nextMove *= FOCUSSPEEDMODIFIER;
+		}
+		else focused = false;
+		if (nextMove != sf::Vector2f{0, 0})
+			move(nextMove);
+	}
+	void drawCharacter(sf::RenderWindow& window) {
+		window.draw(playerSprite);
+		if (focused)
+			window.draw(hitbox);
+	}
+	sf::Vector2f getPosition() {
+		return hitbox.getPosition();
+	}
+	void setbounds(sf::FloatRect bounds){
+		movementBounds = bounds;
+		movementBounds.height -= hitboxRadius * 2, movementBounds.width -= hitboxRadius * 2;
+		movementBounds.top += hitboxRadius, movementBounds.left += hitboxRadius;
+		// If hitbox is outside of bounds, move in bound.
+		if (!bounds.contains(getPosition())) {
+			hitbox.setPosition(movementBounds.left + movementBounds.width * 0.5f, movementBounds.top + movementBounds.height * 0.8f);
+			playerSprite.setPosition(hitbox.getPosition());
+		}
 	}
 };

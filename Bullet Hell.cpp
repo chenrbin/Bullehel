@@ -8,35 +8,27 @@ using namespace std;
 using namespace Constants;
 
 int main(){
-
+    sf::Texture texture;
+    if (!texture.loadFromFile("reimoo.png"))
+        return -1;
     sf::ContextSettings windowSettings;
     windowSettings.antialiasingLevel = 8;
     sf::RenderWindow window(sf::VideoMode(1600, 900), "Bullet Hell", sf::Style::Close | sf::Style::Titlebar, windowSettings);
-    Player reimoo;
     window.setKeyRepeatEnabled(false);
     window.setFramerateLimit(60);
+
+    Player reimoo(PLAYERSTANDARDSPEED, PLAYERHITBOXRADIUS, texture);
+    SfRectangleAtHome screen(GRAY, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP });
+    SfRectangleAtHome border1(TRANSPARENT, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP }, false, WHITE, 1);
+    SfRectangleAtHome border2(TRANSPARENT, { SCREENWIDTH + 2, SCREENHEIGHT + 2 }, { SCREENLEFT - 1, SCREENTOP - 1 }, false, BLACK, 50);
+    reimoo.setbounds(screen.getGlobalBounds());
     while (window.isOpen())
     {
         sf::Event event;
         sf::Vector2f movement();
         float shiftScale = 1;
-        
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
-            shiftScale = 0.5;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-            reimoo.move(-PLAYERSTANDARDSPEED * shiftScale, 0);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-            reimoo.move(0, PLAYERSTANDARDSPEED * shiftScale);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-            reimoo.move(PLAYERSTANDARDSPEED * shiftScale, 0);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-            reimoo.move(0, -PLAYERSTANDARDSPEED * shiftScale);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-            reimoo.move(-PLAYERSTANDARDSPEED * shiftScale, 0);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-            reimoo.move(0, PLAYERSTANDARDSPEED * shiftScale);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-            reimoo.move(PLAYERSTANDARDSPEED * shiftScale, 0);
+
+        reimoo.checkMovement();
         while (window.pollEvent(event))
         {
             switch (event.type)
@@ -53,7 +45,10 @@ int main(){
 
         
         window.clear();
-        reimoo.display(window);
+        window.draw(screen);
+        reimoo.drawCharacter(window);
+        window.draw(border1);
+        window.draw(border2);
         window.display();
     }
 
