@@ -1,5 +1,6 @@
 #pragma once
 #include "Constants.h"
+#include "Mechanisms.h"
 
 #pragma region Sf Sprites At Home
 using namespace std;
@@ -79,18 +80,70 @@ public:
 };
 #pragma endregion
 
+// Animations are meant to be each created once and restarted when played
+class Animation {
+protected:
+	sfClockAtHome startTime;
+	float duration;
 
+public:
+	Animation() {
+		duration = 0;
+	}
+	// Draws the animation to the window
+	virtual void drawAnimation(sf::RenderWindow& window) = 0;
+	virtual ~Animation() {};
+	// Turns on animation
+	virtual void restart() = 0;
+	// Return true if animation has expired
+	virtual bool isOver() {
+		return startTime.getTimeSeconds() > duration;
+	}
+};
+
+// Text that fades after a set duration
+class FadeText : public Animation {
+	float fadeDuration; // In seconds
+	SfTextAtHome text; // Text to display. 
+	sf::Color textColor;
+public:
+	FadeText(SfTextAtHome text, float duration, float fadeDuration) {
+		this->text = text;
+		this->duration = duration;
+		this->fadeDuration = fadeDuration;
+		startTime.restart();
+		textColor = text.getFillColor();
+		textColor.a = 0; // This disables the animation when constructed
+		this->text.setFillColor(textColor);
+	}
+	// Draws the animation to the window
+	void drawAnimation(sf::RenderWindow& window) {
+		float elapsedTime = startTime.getElapsedTime().asSeconds();
+		if (elapsedTime > duration + fadeDuration)
+			return; // Returns nothing if animation is past duration
+		if (elapsedTime > duration && textColor.a > 0) { // Begin fading
+			textColor.a = ((1 - (elapsedTime - duration) / fadeDuration) * 255);
+			text.setFillColor(textColor);
+		}
+		window.draw(text);
+	}
+	// Turns on animation
+	void restart() {
+		startTime.restart();
+		textColor.a = 255;
+		text.setFillColor(textColor);
+	}
+	// Change the text to display
+	void setString(string str) {
+		text.setString(str);
+	}
+};
 
 // Organize drawable rectangle elements
-class BorderRects : sf::Drawable {
+class BorderRects {
 	SfRectangleAtHome background;
 	SfRectangleAtHome border1;
 	SfRectangleAtHome border2;
-	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
-		target.draw(background, states);
-		target.draw(border1, states);
-		target.draw(border2, states);
-	}
 public:
 	BorderRects() {
 		background = SfRectangleAtHome(GRAY, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP });

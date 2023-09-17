@@ -13,10 +13,10 @@ public:
 	}
 
 	// Restarts both clock and storage
-	void restart() {
-		sf::Clock::restart();
+	sf::Time restart() {
 		storage = sf::Time();
 		paused = false;
+		return sf::Clock::restart();
 	}
 	// Saves current time in storage
 	void pause() {

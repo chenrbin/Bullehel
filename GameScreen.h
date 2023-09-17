@@ -8,17 +8,21 @@ class GameScreen {
 	sf::Sprite background;
 	BorderRects* borderRects;
 	BulletManager* bulletManager;
+	FadeText* hitIndicator; // Delete once Iimplement death
 public:
-	GameScreen(Player player, BorderRects* borderRects, BulletManager* bulletManager) {
+	GameScreen(Player player, BorderRects* borderRects, BulletManager* bulletManager, FadeText* hit) {
 		reimoo = player;
 		this->borderRects = borderRects;
 		reimoo.setbounds(borderRects->getBackground().getGlobalBounds());
 		this->bulletManager = bulletManager;
+		hitIndicator = hit;
 	}
 	// Checks every frame
 	void doStuff() {
 		reimoo.checkMovement();
 		bulletManager->doStuff();
+		if (bulletManager->checkPlayerCollision(reimoo.getHitbox()))
+			hitIndicator->restart();
 	}
 	void drawScreen(sf::RenderWindow& window) {
 		window.draw(borderRects->getBackground());

@@ -4,7 +4,8 @@
 using namespace std;
 using namespace Constants;
 class Player {
-	SfCircleAtHome hitbox;
+	//SfCircleAtHome hitboxSprite; // Will be drawn when player is holding shift.
+	SfCircleAtHome hitbox; // Actual hitbox is invisible and slightly smaller.
 	sf::Sprite playerSprite;
 	sf::FloatRect movementBounds;
 	float moveSpeed, hitboxRadius;
@@ -19,7 +20,7 @@ public:
 	Player(float moveSpeed, float hitboxRadius, sf::Texture& texture) {
 		this->moveSpeed = moveSpeed;
 		this->hitboxRadius = hitboxRadius;
-		hitbox = SfCircleAtHome(WHITE, hitboxRadius, { 800, 800 }, true, RED, -2);
+		hitbox = SfCircleAtHome(WHITE, hitboxRadius, { 800, 800 }, true, RED, -HITBOXOUTLINE);
 		playerSprite.setTexture(texture);
 		playerSprite.setScale(0.6, 0.6);
 		sf::FloatRect bound = playerSprite.getLocalBounds();
@@ -75,5 +76,8 @@ public:
 			hitbox.setPosition(movementBounds.left + movementBounds.width * 0.5f, movementBounds.top + movementBounds.height * 0.8f);
 			playerSprite.setPosition(hitbox.getPosition());
 		}
+	}
+	SfCircleAtHome& getHitbox() {
+		return hitbox;
 	}
 };

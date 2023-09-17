@@ -3,18 +3,25 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: make projectiles, organize sprites, fps timer, bullet direction algorithm, player collision
+	// Todo: make projectiles, organize sprites, bullet direction algorithm, square vs circular hitboxes
 	
 
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
-	sf::FloatRect SCREENBOUNDS(SCREENLEFT, SCREENTOP, SCREENWIDTH, SCREENHEIGHT);
+	const sf::FloatRect SCREENBOUNDS(SCREENLEFT, SCREENTOP, SCREENWIDTH, SCREENHEIGHT);
 	const int BORDERMARGIN = 50; // The margin where game objects exist but are not seen. Past this is out of bounds
+	const int HITBOXOUTLINE = 2; // Outline for circular hitboxes. Ignored in collision detection
+
+	// Object positions
+	const sf::Vector2f SCREENPOS(SCREENLEFT, SCREENTOP);
+	const sf::Vector2f FPSTEXTPOS(SCREENLEFT + SCREENWIDTH - 50, SCREENTOP + SCREENHEIGHT - 50 );
+
 
 	// Mechanical variables
 	const float PLAYERSTANDARDSPEED = 6, FOCUSSPEEDMODIFIER = 0.5f;
 	const float PLAYERHITBOXRADIUS = 6;
+	const float FPS = 60;
 
 
 	// Set color constants for easy use and passing to functions
