@@ -57,6 +57,7 @@ public:
 	}
 };
 
+// Class for easy sf::Circle generation
 class SfCircleAtHome : public sf::CircleShape {
 public:
 	SfCircleAtHome() {}
@@ -77,3 +78,32 @@ public:
 	}
 };
 #pragma endregion
+
+
+
+// Organize drawable rectangle elements
+class BorderRects : sf::Drawable {
+	SfRectangleAtHome background;
+	SfRectangleAtHome border1;
+	SfRectangleAtHome border2;
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+		target.draw(background, states);
+		target.draw(border1, states);
+		target.draw(border2, states);
+	}
+public:
+	BorderRects() {
+		background = SfRectangleAtHome(GRAY, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP });
+		border1 = SfRectangleAtHome(TRANSPARENT, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP }, false, WHITE, 1);
+		border2 = SfRectangleAtHome(TRANSPARENT, { SCREENWIDTH + 2, SCREENHEIGHT + 2 }, { SCREENLEFT - 1, SCREENTOP - 1 }, false, BLACK, BORDERMARGIN * 2);
+	}
+	SfRectangleAtHome& getBackground() {
+		return background;
+	}
+	SfRectangleAtHome& getBorder1() {
+		return border1;
+	}
+	SfRectangleAtHome& getBorder2() {
+		return border2;
+	}
+};

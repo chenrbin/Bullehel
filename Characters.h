@@ -11,12 +11,17 @@ class Player {
 	bool focused;
 
 public:
+	Player() {
+		moveSpeed = 0;
+		hitboxRadius = 0;
+		focused = false;
+	};
 	Player(float moveSpeed, float hitboxRadius, sf::Texture& texture) {
 		this->moveSpeed = moveSpeed;
 		this->hitboxRadius = hitboxRadius;
 		hitbox = SfCircleAtHome(WHITE, hitboxRadius, { 800, 800 }, true, RED, -2);
 		playerSprite.setTexture(texture);
-		playerSprite.setScale(0.5, 0.5);
+		playerSprite.setScale(0.6, 0.6);
 		sf::FloatRect bound = playerSprite.getLocalBounds();
 		playerSprite.setOrigin(bound.width / 2, bound.height / 2);
 	}
