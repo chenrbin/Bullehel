@@ -35,10 +35,18 @@ int main(){
 
     sfClockAtHome fpsTimer;
     int fpsCounter = 0;
-    int num = 0;
-   
-    bulletManager.addRiceBulletR({ 400, 400 }, 0, 0, BLUE);
+    Pattern* generalBullets = new Pattern();
+    generalBullets->addCircleBulletR({ 350, 400 }, 0, 0);
+    generalBullets->addRiceBulletR({ 400, 400 }, 0, 0);
+    generalBullets->addDotBulletR({ 450, 400 }, 0, 0);
+    generalBullets->addTalismanBulletR({ 500, 400 }, 0, 0);
 
+    bulletManager.addPattern(generalBullets);
+    Bowap* bowap = new Bowap(270, 150, -100, 8, 0, {400, 400}, 1);
+    bulletManager.addPattern(bowap);
+    //bowap->setActive(false);
+ 
+    
     sfClockAtHome bulletTimer;
     int bulletCounter = 0;
     SfTextAtHome fpsText(font, WHITE, "60", 20, FPSTEXTPOS);
@@ -52,19 +60,6 @@ int main(){
         }
         fpsCounter++;
 
-        bulletCounter++;
-        if (bulletCounter % 2 == 0)
-        {
-            int vel = 150;
-            int accel = -100;
-            num = 270 + vel * bulletCounter / FPS + accel * pow(bulletCounter / FPS, 2);
-            
-            int streamCount = 8;
-            for (int i = 0; i < streamCount; i++)
-                bulletManager.addRiceBulletR({ 400, 400 }, 4, num + i * 360 / streamCount, RED, STANDARDRICEBULLETRADIUS);
-        }
-       
-
         screen.doStuff();
         sf::Event event;
         while (window.pollEvent(event))
@@ -75,6 +70,10 @@ int main(){
                 window.close();
                 break;
             case sf::Event::KeyPressed:
+                if (event.key.code == sf::Keyboard::Space)
+                    bulletManager.rotateAllBullets(90);
+                if (event.key.code == sf::Keyboard::Z)
+                    bowap->resetCounter();
                 break;
             case sf::Event::LostFocus:
                 break;
