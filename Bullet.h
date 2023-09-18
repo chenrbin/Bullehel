@@ -6,7 +6,7 @@ struct BulletSprite : public sf::Drawable, public sf::Transformable{};
 // Game projectiles
 struct Bullet : public sf::Drawable {
 	sf::Shape* hitbox; // Hitbox will be a circle or a rectangle. Rectangles will use getGlobalBounds().intersects(). Circles will store a separate radius variable
-	sf::Shape* sprite;
+	sf::Shape* sprite; // Base sprite
 	float xVelocity, yVelocity;
 	
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -49,23 +49,32 @@ struct Bullet : public sf::Drawable {
 
 // Basic circular bullet with circular hitbox
 class CircleBullet : public Bullet {
+protected:
 	int hitBoxRadius; // Used for collision detection;
 public:
-	CircleBullet(sf::Vector2f position = SCREENPOS, float xVelocity = 0, float yVelocity = 0, int radius = 0, sf::Color color = WHITE) : Bullet(xVelocity, yVelocity) {
-		sprite = new SfCircleAtHome(WHITE, radius, position, true, color, -HITBOXOUTLINE);
+	CircleBullet(sf::Vector2f position = SCREENPOS, float xVelocity = 0, float yVelocity = 0, sf::Color color = WHITE, int radius = 0) : Bullet(xVelocity, yVelocity) {
+		sprite = new SfCircleAtHome(WHITE, radius, position, true, color, STANDARDCIRCLEOUTLINE);
 		hitBoxRadius = radius;
-		SfCircleAtHome circle;
-		circle.setRadius(radius);
-		circle.alignCenter();
-		circle.setPosition(position);
-		hitbox = &circle;
+		SfCircleAtHome* circle = new SfCircleAtHome();
+		circle->setRadius(radius);
+		circle->alignCenter();
+		circle->setPosition(position);
+		hitbox = circle;
 	}
-	bool checkPlayerCollision(sf::CircleShape& hitbox) {
-		sf::Vector2f hitBoxPos = hitbox.getPosition();
+	bool checkPlayerCollision(sf::CircleShape& playerHitbox) {
+		sf::Vector2f hitBoxPos = playerHitbox.getPosition();
 		sf::Vector2f bulletPos = sprite->getPosition();
-		return sqrt(pow(hitBoxPos.x - bulletPos.x, 2) + pow(hitBoxPos.y - bulletPos.y, 2)) <= hitbox.getRadius() + hitBoxRadius - HITBOXOUTLINE * 2;
+		return sqrt(pow(hitBoxPos.x - bulletPos.x, 2) + pow(hitBoxPos.y - bulletPos.y, 2)) <= playerHitbox.getRadius() + hitBoxRadius - playerHitbox.getOutlineThickness();
 	}
 
+};
+
+class RiceBullet : public CircleBullet {
+public:
+	RiceBullet(sf::Vector2f position = SCREENPOS, float xVelocity = 0, float yVelocity = 0, sf::Color color = WHITE, int radius = 0) : CircleBullet(position, xVelocity, yVelocity, color, radius) {
+		sprite->setOutlineThickness(SMALLCIRCLEOUTLINE);
+		sprite->setScale(0.8, 2);
+	}
 };
 
 // Manager for all bullet objects. Will be called by main, GameScreen, and others.
@@ -95,12 +104,20 @@ public:
 		processMovement();
 	}
 	// Add circle bullet with velocity in rectangulat coordinates
-	void addCircleBullet(sf::Vector2f position, float xVelocity = 0, float yVelocity = 0, int radius = 0, sf::Color color = RED) {
-		bullets.push_back(new CircleBullet(position, xVelocity, yVelocity, radius, color));
+	void addCircleBullet(sf::Vector2f position, sf::Vector2f velocity, sf::Color color = RED, int radius = STANDARDCIRCLEBULLETRADIUS) {
+		bullets.push_back(new CircleBullet(position, velocity.x, velocity.y, color, radius));
 	}
 	// Add circle bullet with velocity in polar coordinates
-	void addCircleBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, int radius = 0, sf::Color color = RED) {
-		bullets.push_back(new CircleBullet(position, speed * cos(angleDegrees * 3.14159f / 180), speed * -sin(angleDegrees * 3.14159f / 180), radius, color));
+	void addCircleBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = RED, int radius = STANDARDCIRCLEBULLETRADIUS) {
+		bullets.push_back(new CircleBullet(position, speed * cos(angleDegrees * 3.14159f / 180), speed * -sin(angleDegrees * 3.14159f / 180), color, radius));
+	}
+	// Add rice bullet with velocity in polar coordinates
+	void addRiceBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = RED, int radius = STANDARDRICEBULLETRADIUS) {
+		bullets.push_back(new RiceBullet(position, speed * cos(angleDegrees * 3.14159f / 180), speed * -sin(angleDegrees * 3.14159f / 180), color, radius));
+	}
+	// Add rice bullet with velocity in polar coordinates
+	void addDotBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = RED, int radius = STANDARDDOTBULLETRADIUS) {
+		bullets.push_back(new RiceBullet(position, speed * cos(angleDegrees * 3.14159f / 180), speed * -sin(angleDegrees * 3.14159f / 180), color, radius));
 	}
 	// Call this function every frame to move bullets
 	void processMovement() {

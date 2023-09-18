@@ -23,6 +23,7 @@ public:
 		bulletManager->doStuff();
 		if (bulletManager->checkPlayerCollision(reimoo.getHitbox()))
 			hitIndicator->restart();
+
 	}
 	void drawScreen(sf::RenderWindow& window) {
 		window.draw(borderRects->getBackground());

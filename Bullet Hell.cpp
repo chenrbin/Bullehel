@@ -37,6 +37,7 @@ int main(){
     int fpsCounter = 0;
     int num = 0;
    
+    bulletManager.addRiceBulletR({ 400, 400 }, 0, 0, BLUE);
 
     sfClockAtHome bulletTimer;
     int bulletCounter = 0;
@@ -60,7 +61,7 @@ int main(){
             
             int streamCount = 8;
             for (int i = 0; i < streamCount; i++)
-                bulletManager.addCircleBulletR({ 400, 400 }, 4, num + i * 360 / streamCount, 8, RED);
+                bulletManager.addRiceBulletR({ 400, 400 }, 4, num + i * 360 / streamCount, RED, STANDARDRICEBULLETRADIUS);
         }
        
 
@@ -76,17 +77,17 @@ int main(){
             case sf::Event::KeyPressed:
                 break;
             case sf::Event::LostFocus:
-                print(1);
+                break;
             default:
                 break;
             }
         }
-
         window.clear();
         screen.drawScreen(window);
         window.draw(fpsText);
         hitFade.drawAnimation(window);
         window.display();
+
     }
 
     return 0;

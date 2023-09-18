@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: make projectiles, organize sprites, bullet direction algorithm, square vs circular hitboxes
+	// Todo: make projectiles, organize sprites, bullet direction algorithm, square vs circular hitboxes, improve calls to make default radii
 	
 
 	// Size and dimensions
@@ -11,16 +11,21 @@ namespace Constants {
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
 	const sf::FloatRect SCREENBOUNDS(SCREENLEFT, SCREENTOP, SCREENWIDTH, SCREENHEIGHT);
 	const int BORDERMARGIN = 50; // The margin where game objects exist but are not seen. Past this is out of bounds
-	const int HITBOXOUTLINE = 2; // Outline for circular hitboxes. Ignored in collision detection
-
+	
+	// Sprite variables
+	const int STANDARDCIRCLEOUTLINE = 2; // Outline for circular hitboxes. Ignored in collision detection
+	const int SMALLCIRCLEOUTLINE = 1;
+	const int PLAYERHITBOXRADIUS = 4;
+	const int STANDARDCIRCLEBULLETRADIUS = 6;
+	const int STANDARDRICEBULLETRADIUS = 4;
+	const int STANDARDDOTBULLETRADIUS = 2;
+	
 	// Object positions
 	const sf::Vector2f SCREENPOS(SCREENLEFT, SCREENTOP);
 	const sf::Vector2f FPSTEXTPOS(SCREENLEFT + SCREENWIDTH - 50, SCREENTOP + SCREENHEIGHT - 50 );
 
-
 	// Mechanical variables
 	const float PLAYERSTANDARDSPEED = 6, FOCUSSPEEDMODIFIER = 0.5f;
-	const float PLAYERHITBOXRADIUS = 6;
 	const float FPS = 60;
 
 

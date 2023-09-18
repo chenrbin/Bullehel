@@ -20,7 +20,7 @@ public:
 	Player(float moveSpeed, float hitboxRadius, sf::Texture& texture) {
 		this->moveSpeed = moveSpeed;
 		this->hitboxRadius = hitboxRadius;
-		hitbox = SfCircleAtHome(WHITE, hitboxRadius, { 800, 800 }, true, RED, -HITBOXOUTLINE);
+		hitbox = SfCircleAtHome(WHITE, hitboxRadius, { 800, 800 }, true, RED, STANDARDCIRCLEOUTLINE);
 		playerSprite.setTexture(texture);
 		playerSprite.setScale(0.6, 0.6);
 		sf::FloatRect bound = playerSprite.getLocalBounds();
