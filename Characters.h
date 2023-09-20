@@ -4,7 +4,6 @@
 using namespace std;
 using namespace Constants;
 class Player {
-	//SfCircleAtHome hitboxSprite; // Will be drawn when player is holding shift.
 	SfCircleAtHome hitbox; // Actual hitbox is invisible and slightly smaller.
 	sf::Sprite playerSprite;
 	sf::FloatRect movementBounds;
@@ -61,8 +60,6 @@ public:
 	}
 	void drawCharacter(sf::RenderWindow& window) {
 		window.draw(playerSprite);
-		if (focused)
-			window.draw(hitbox);
 	}
 	sf::Vector2f getPosition() {
 		return hitbox.getPosition();
@@ -79,5 +76,8 @@ public:
 	}
 	SfCircleAtHome& getHitbox() {
 		return hitbox;
+	}
+	bool getFocused() {
+		return focused;
 	}
 };

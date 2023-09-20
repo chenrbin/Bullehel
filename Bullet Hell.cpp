@@ -11,6 +11,14 @@
 using namespace std;
 using namespace Constants;
 
+// Add a list of static bullets to the general pattern
+void addTestBullets(Pattern* generalBullets) {
+    generalBullets->addCircleBulletR({ 350, 400 }, 0, 0);
+    generalBullets->addRiceBulletR({ 400, 400 }, 0, 0);
+    generalBullets->addDotBulletR({ 450, 400 }, 0, 0);
+    generalBullets->addTalismanBulletR({ 500, 400 }, 0, 0);
+    generalBullets->addBubbleBulletR({ 550, 400 }, 0, 0);
+}
 int main(){
     srand(time(NULL));
     sf::Texture texture;
@@ -36,17 +44,18 @@ int main(){
     sfClockAtHome fpsTimer;
     int fpsCounter = 0;
     Pattern* generalBullets = new Pattern();
-    generalBullets->addCircleBulletR({ 350, 400 }, 0, 0);
-    generalBullets->addRiceBulletR({ 400, 400 }, 0, 0);
-    generalBullets->addDotBulletR({ 450, 400 }, 0, 0);
-    generalBullets->addTalismanBulletR({ 500, 400 }, 0, 0);
-
     bulletManager.addPattern(generalBullets);
-    Bowap* bowap = new Bowap(270, 150, -100, 8, 0, {400, 400}, 1);
+
+    addTestBullets(generalBullets);
+
+    Bowap* bowap = new Bowap(5, 150, -100, 0, 8, 10, 6, {400, 400});
     bulletManager.addPattern(bowap);
-    //bowap->setActive(false);
- 
-    
+    bowap->setActive(false);
+    QedRipples* qed = new QedRipples(0, 80, { 400, 200 }, 0.75, 3);
+    bulletManager.addPattern(qed);
+    //qed->setActive(false);
+
+
     sfClockAtHome bulletTimer;
     int bulletCounter = 0;
     SfTextAtHome fpsText(font, WHITE, "60", 20, FPSTEXTPOS);
