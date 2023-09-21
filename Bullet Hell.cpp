@@ -18,6 +18,7 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addDotBulletR({ 450, 400 }, 0, 0);
     generalBullets->addTalismanBulletR({ 500, 400 }, 0, 0);
     generalBullets->addBubbleBulletR({ 550, 400 }, 0, 0);
+    generalBullets->addLaser({ 400, 200 }, 90, 10, RED);
 }
 int main(){
     srand(time(NULL));
@@ -44,17 +45,20 @@ int main(){
     sfClockAtHome fpsTimer;
     int fpsCounter = 0;
     Pattern* generalBullets = new Pattern();
-    bulletManager.addPattern(generalBullets);
-
     addTestBullets(generalBullets);
 
-    Bowap* bowap = new Bowap(5, 150, -100, 0, 8, 10, 6, {400, 400});
-    bulletManager.addPattern(bowap);
-    bowap->setActive(false);
-    QedRipples* qed = new QedRipples(0, 80, { 400, 200 }, 0.75, 3);
-    bulletManager.addPattern(qed);
-    //qed->setActive(false);
+    bulletManager.addPattern(generalBullets);
+    bulletManager.addPattern(new Bowap(5, 150, -100, 8, { 400, 400 }, 30, 6));
+    bulletManager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3));
+    bulletManager.addPattern(new FlyingSaucer(36, { 400, 250 }, 0.35, 2, 0));
+    bulletManager.addPattern(new GengetsuTime(40, { 400, 200 }, 10, 10));
+    bulletManager.deactivateAllPatterns();
+    print(bulletManager[0]->getBullets().size());
 
+    sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
+    cursor->rotate(90.f);
+    vector<string> menuText = { "Test", "BOWAP", "QED", "UFO", "GRT"};
+    ClickableMenu danmaku(font, WHITE, menuText, 30, {850, 200}, 30, *cursor);
 
     sfClockAtHome bulletTimer;
     int bulletCounter = 0;
@@ -71,6 +75,7 @@ int main(){
 
         screen.doStuff();
         sf::Event event;
+        bool menuClicked = false;
         while (window.pollEvent(event))
         {
             switch (event.type)
@@ -79,13 +84,25 @@ int main(){
                 window.close();
                 break;
             case sf::Event::KeyPressed:
+                if (event.key.code >= 26 && event.key.code <= 35) {
+                    bulletManager.deactivateAllPatterns();
+                    if (event.key.code - 26 < bulletManager.getPatternCount()) {
+                        bulletManager[event.key.code - 26]->setActive(true);
+                    }   
+                }
+
                 if (event.key.code == sf::Keyboard::Space)
                     bulletManager.rotateAllBullets(90);
-                if (event.key.code == sf::Keyboard::Z)
-                    bowap->resetCounter();
+
                 break;
-            case sf::Event::LostFocus:
+            case sf::Event::MouseMoved:
+                danmaku.updateMouseMove(event.mouseMove.x, event.mouseMove.y);
                 break;
+            case sf::Event::MouseButtonPressed:
+                if (danmaku.updateMouseClick(event.mouseButton.x, event.mouseButton.y)) {
+                    bulletManager.deactivateAllPatterns();
+                    bulletManager[danmaku.getCursorPos()]->setActive(true); // Index 0 is generalBullets
+                }
             default:
                 break;
             }
@@ -93,6 +110,7 @@ int main(){
         window.clear();
         screen.drawScreen(window);
         window.draw(fpsText);
+        window.draw(danmaku);
         hitFade.drawAnimation(window);
         window.display();
 

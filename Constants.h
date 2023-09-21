@@ -3,16 +3,17 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes,
+	// Todo: convex shapes, laser hitbox, laser growth, review comments
 	// more patterns, more bullets, lasers
+	// mercury poison, resurrection butterfly
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
 	const sf::FloatRect SCREENBOUNDS(SCREENLEFT, SCREENTOP, SCREENWIDTH, SCREENHEIGHT);
-	const int BORDERMARGIN = 50; // The margin where game objects exist but are not seen. Past this is out of bounds
+	const int BORDERMARGIN = WINDOWWIDTH; // The margin where game objects exist but are not seen. Past this is out of bounds
 	
 	// Sprite variables
-	const int STANDARDCIRCLEOUTLINE = 2; // Outline for circular hitboxes. Ignored in collision detection
+	const int STANDARDCIRCLEOUTLINE = 2;
 	const float SMALLCIRCLEOUTLINE = 0.5;
 	const int PLAYERHITBOXRADIUS = 4;
 	const int STANDARDCIRCLEBULLETRADIUS = 6;
@@ -20,7 +21,8 @@ namespace Constants {
 	const int STANDARDDOTBULLETRADIUS = 4;
 	const int STANDARDTALISMANBULLETRADIUS = 4;
 	const int STANDARDBUBBLEBULLETRADIUS = 15;
-
+	const int STARTINGLASEROUTLINE = 1;
+	const int FINALLASEROUTLINE = 2;
 	
 	// Object positions
 	const sf::Vector2f SCREENPOS(SCREENLEFT, SCREENTOP);
@@ -31,7 +33,8 @@ namespace Constants {
 	const float FPS = 60;
 
 	// Bullet flags
-	const char NEUTRAL = 0, BOUNCED = 1;
+	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1;
+
 
 	// Set color constants for easy use and passing to functions
 	const sf::Color WHITE(255, 255, 255);

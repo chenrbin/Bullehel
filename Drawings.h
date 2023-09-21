@@ -53,6 +53,14 @@ public:
 		const sf::FloatRect box = getLocalBounds();
 		setOrigin(box.width / 2.0f, box.height / 2.0f);
 	}
+	void alignX() {
+		const sf::FloatRect box = getLocalBounds();
+		setOrigin(getOrigin().x, box.height / 2.0f);
+	}
+	void alignY() {
+		const sf::FloatRect box = getLocalBounds();
+		setOrigin(box.width / 2.0f, getOrigin().y);
+	}
 	bool contains(float x, float y) {
 		return getGlobalBounds().contains(x, y);
 	}
@@ -79,6 +87,81 @@ public:
 	}
 };
 #pragma endregion
+
+// Class for a text that can be navigated and clicked
+class ClickableMenu : public sf::Drawable {
+	vector<SfTextAtHome> texts;
+	sf::CircleShape cursor; // Takes in a shape as the cursor. Must preset attributes.
+	int cursorPos;
+
+	// Draw all menu components
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+		for (int i = 0; i < texts.size(); i++)
+			target.draw(texts[i], states);
+		target.draw(cursor, states);
+	}
+public:
+	ClickableMenu() {
+		cursorPos = 0;
+	}
+	ClickableMenu(sf::Font& font, sf::Color color, vector<string>& menuText, int textSize, sf::Vector2f startPos, int spacing, sf::CircleShape cursor) {
+		for (int i = 0; i < menuText.size(); i++)
+			texts.push_back(SfTextAtHome(font, color, menuText[i], textSize, { startPos.x, startPos.y + spacing * i }));
+		this->cursor = cursor;
+		cursor.setPosition(startPos.x - 5, startPos.y);
+		cursorPos = 0;
+		updateCursor();
+	}
+	void moveUp() {
+		cursorPos--;
+		if (cursorPos < 0)
+			cursorPos = texts.size() - 1;
+		updateCursor();
+	}
+	void moveDown() {
+		cursorPos++;
+		if (cursorPos >= texts.size())
+			cursorPos = 0;
+		updateCursor();
+	}
+	// Update cursor position to the left of the text it is pointing to
+	void updateCursor() {
+		cursor.setPosition(texts[cursorPos].getPosition().x - 5, texts[cursorPos].getPosition().y);
+	}
+	// Update cursor based on mouse position. Return true if a text is selected
+	bool updateMouseClick(int x, int y) {
+		for (int i = 0; i < texts.size(); i++) {
+			if (texts[i].contains(x, y)) {
+				cursorPos = i;
+				updateCursor();
+				return true;
+			}
+		}
+		return false;
+	}
+	// Slightly different from mouse click. Needed for sound effect conditionals
+	bool updateMouseMove(int x, int y) {
+		for (int i = 0; i < texts.size(); i++) {
+			if (texts[i].contains(x, y)) {
+				if (cursorPos != i) {
+					cursorPos = i;
+					updateCursor();
+					return true;
+				}
+				else
+					return false;
+			}
+		}
+		return false;
+	}
+	int getCursorPos() {
+		return cursorPos;
+	}
+	void resetCursorPos() {
+		cursorPos = 0;
+		updateCursor();
+	}
+};
 
 // Animations are meant to be each created once and restarted when played
 class Animation {
@@ -148,7 +231,7 @@ public:
 	BorderRects() {
 		background = SfRectangleAtHome(GRAY, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP });
 		border1 = SfRectangleAtHome(TRANSPARENT, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP }, false, WHITE, 1);
-		border2 = SfRectangleAtHome(TRANSPARENT, { SCREENWIDTH + 2, SCREENHEIGHT + 2 }, { SCREENLEFT - 1, SCREENTOP - 1 }, false, BLACK, BORDERMARGIN * 2);
+		border2 = SfRectangleAtHome(TRANSPARENT, { SCREENWIDTH + 2, SCREENHEIGHT + 2 }, { SCREENLEFT - 1, SCREENTOP - 1 }, false, BLACK, BORDERMARGIN);
 	}
 	SfRectangleAtHome& getBackground() {
 		return background;
