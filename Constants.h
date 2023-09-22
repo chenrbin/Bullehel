@@ -3,9 +3,9 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, laser hitbox, laser growth, review comments
-	// more patterns, more bullets, lasers
-	// mercury poison, resurrection butterfly
+	// Todo: convex shapes, samesideaslaser for wide horizontal lasers, review comments
+	// more patterns, more bullets
+	// mercury poison, resurrection butterfly, virtue of wind god
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
@@ -14,7 +14,7 @@ namespace Constants {
 	
 	// Sprite variables
 	const int STANDARDCIRCLEOUTLINE = 2;
-	const float SMALLCIRCLEOUTLINE = 0.5;
+	const float SMALLBULLETOUTLINE = 0.5;
 	const int PLAYERHITBOXRADIUS = 4;
 	const int STANDARDCIRCLEBULLETRADIUS = 6;
 	const int STANDARDRICEBULLETRADIUS = 4;
@@ -57,6 +57,8 @@ namespace Constants {
 	const sf::Color DEFAULTDOTBULLETCOLOR = SEETHROUGH;
 	const sf::Color DEFAULTTALISMANBULLETCOLOR = MAGENTA;
 	const sf::Color DEFAULTBUBBLEBULLETCOLOR = RED;
+	const sf::Color DEFAULTLASERCOLOR = BLUE;
+
 
 	const float PI = 3.14159;
 	const sf::Color PLAYERHITBOXCOLOR = RED;

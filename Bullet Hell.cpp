@@ -5,6 +5,7 @@
 #include "Drawings.h"
 #include "Mechanisms.h"
 #include "Bullet.h"
+#include "Pattern.h"
 #include "GameScreen.h"
 #include "Characters.h"
 
@@ -18,7 +19,7 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addDotBulletR({ 450, 400 }, 0, 0);
     generalBullets->addTalismanBulletR({ 500, 400 }, 0, 0);
     generalBullets->addBubbleBulletR({ 550, 400 }, 0, 0);
-    generalBullets->addLaser({ 400, 200 }, 90, 10, RED);
+    generalBullets->addLaser({ 400, 200 }, 1, 50, 20, 0.5, BLUE);
 }
 int main(){
     srand(time(NULL));
@@ -39,21 +40,20 @@ int main(){
 
     Player reimoo(PLAYERSTANDARDSPEED, PLAYERHITBOXRADIUS, texture);
     BorderRects borderRects;
-    BulletManager bulletManager;
-    GameScreen screen(reimoo, &borderRects, &bulletManager, &hitFade);
+    PatternManager manager;
+    GameScreen screen(reimoo, &borderRects, &manager, &hitFade);
 
     sfClockAtHome fpsTimer;
     int fpsCounter = 0;
     Pattern* generalBullets = new Pattern();
     addTestBullets(generalBullets);
 
-    bulletManager.addPattern(generalBullets);
-    bulletManager.addPattern(new Bowap(5, 150, -100, 8, { 400, 400 }, 30, 6));
-    bulletManager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3));
-    bulletManager.addPattern(new FlyingSaucer(36, { 400, 250 }, 0.35, 2, 0));
-    bulletManager.addPattern(new GengetsuTime(40, { 400, 200 }, 10, 10));
-    bulletManager.deactivateAllPatterns();
-    print(bulletManager[0]->getBullets().size());
+    manager.addPattern(generalBullets);
+    manager.addPattern(new Bowap(5, 150, -100, 8, { 400, 400 }, 30, 6));
+    manager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3));
+    manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2, 0));
+    manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
+    manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
     cursor->rotate(90.f);
@@ -85,14 +85,14 @@ int main(){
                 break;
             case sf::Event::KeyPressed:
                 if (event.key.code >= 26 && event.key.code <= 35) {
-                    bulletManager.deactivateAllPatterns();
-                    if (event.key.code - 26 < bulletManager.getPatternCount()) {
-                        bulletManager[event.key.code - 26]->setActive(true);
+                    manager.deactivateAllPatterns();
+                    if (event.key.code - 26 < manager.getPatternCount()) {
+                        manager[event.key.code - 26]->setActive(true);
                     }   
                 }
 
                 if (event.key.code == sf::Keyboard::Space)
-                    bulletManager.rotateAllBullets(90);
+                    manager.rotateAllBullets(30);
 
                 break;
             case sf::Event::MouseMoved:
@@ -100,8 +100,8 @@ int main(){
                 break;
             case sf::Event::MouseButtonPressed:
                 if (danmaku.updateMouseClick(event.mouseButton.x, event.mouseButton.y)) {
-                    bulletManager.deactivateAllPatterns();
-                    bulletManager[danmaku.getCursorPos()]->setActive(true); // Index 0 is generalBullets
+                    manager.deactivateAllPatterns();
+                    manager[danmaku.getCursorPos()]->setActive(true); // Index 0 is generalBullets
                 }
             default:
                 break;

@@ -7,10 +7,10 @@ class GameScreen {
 	Player reimoo;
 	sf::Sprite background;
 	BorderRects* borderRects;
-	BulletManager* bulletManager;
+	PatternManager* bulletManager;
 	FadeText* hitIndicator; // Delete once I implement death
 public:
-	GameScreen(Player player, BorderRects* borderRects, BulletManager* bulletManager, FadeText* hit) {
+	GameScreen(Player player, BorderRects* borderRects, PatternManager* bulletManager, FadeText* hit) {
 		reimoo = player;
 		this->borderRects = borderRects;
 		reimoo.setbounds(borderRects->getBackground().getGlobalBounds());
