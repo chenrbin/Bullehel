@@ -161,11 +161,16 @@ public:
 		for (sf::Shape* extraSprite : extraSprites)
 			extraSprite->rotate(angleDegrees);
 	}
-	virtual void setPosition(sf::Vector2f position) {
+	void setPosition(sf::Vector2f position) {
 		sprite->setPosition(position);
 		for (sf::Shape* extraSprite : extraSprites)
 			extraSprite->setPosition(position);
 
+	}
+	void adjustPosition(float x, float y) {
+		sprite->move(x, y);
+		for (sf::Shape* extraSprite : extraSprites)
+			extraSprite->move(x, y);
 	}
 	// Flip the x coordinate (reflection along the y axis)
 	virtual void flipX() {
@@ -195,8 +200,6 @@ protected:
 
 	// Internal calculation variables
 	int frameCounter;
-	float slope;
-	float intercept;
 
 	// Operation pointers
 	SfRectangleAtHome* rect; // Pointer shared with sprite for rectangle specific functions
@@ -215,10 +218,9 @@ public:
 		this->centerPos = centerPos;
 		this->activationDelay = activationDelay;
 		frameCounter = 0;
-		slope = 0, intercept = 0;
 		hitboxActive = false;
 
-		color.a = 200;
+		color.a = 150;
 		currentWidth = 1;
 		rect = new SfRectangleAtHome(WHITE, { WINDOWWIDTH, currentWidth }, centerPos, false, color, 1);
 		sprite = rect;
@@ -228,12 +230,13 @@ public:
 	}
 	void rotateBullet(float angleDegrees) {
 		sprite->rotate(angleDegrees);
-		calculateSlopeIntercept();
 		alignSprite();
 	}
 	// Process the active status and growth of laser
 	virtual void processMovement() {
 		frameCounter++;
+		rotateBullet(1);
+
 		// Return if laser should not be active
 		if (frameCounter / FPS < activationDelay)
 			return;
@@ -243,18 +246,19 @@ public:
 		float targetWidth = (frameCounter / FPS - activationDelay) * growthSpeed;
 		if (targetWidth < maxWidth) {
 			rect->setSize({ rect->getSize().x, targetWidth });
-			rect->setOutlineThickness(targetWidth / 5);
+			rect->setOutlineThickness(max(targetWidth / 5, 1.f));
 			cir->setRadius(targetWidth / 1.4);
 			alignSprite();
 			// Align circle only during laser size change
 			cir->alignCenter();
 			cir->setPosition(centerPos);
-
 			currentWidth = targetWidth;
 		}
 		else
 			currentWidth = maxWidth;
-		if (xVelocity != 0 && yVelocity != 0) {
+		if (xVelocity != 0 || yVelocity != 0) {
+			centerPos.x += xVelocity;
+			centerPos.y += yVelocity;
 			sprite->move(xVelocity, yVelocity);
 			for (sf::Shape* extraSprite : extraSprites)
 				extraSprite->move(xVelocity, yVelocity);
@@ -280,52 +284,27 @@ public:
 		cir->alignCenter();
 		cir->setPosition(centerPos);
 	}
-	void calculateSlopeIntercept() {
-		float angleDegrees = sprite->getRotation();
-		if (angleDegrees == 270 || angleDegrees == 90)
-			return; // Skip if laser is vertical
-		// y = mx + b, b = y - mx, x = (y - b) / m
-		slope = tan(angleDegrees * PI / 180);
-		intercept = centerPos.y - centerPos.x * slope;
-	}
 	bool checkPlayerCollision(sf::CircleShape& hitbox) {
 		if (!hitboxActive)
 			return false;
+		// Compare the relative position of the hitbox to an upright rect
 		sf::Vector2f hitboxPos = hitbox.getPosition();
-		float angleDegrees = sprite->getRotation();
-		float laserWidth = (currentWidth - rect->getOutlineThickness() * 2) / sin(angleDegrees / 180 * PI);
-
-		float outline = rect->getOutlineThickness();
-		// Directly vertical or horizontal lasers
-		if (angleDegrees == 90 || angleDegrees == 270 || angleDegrees == 0 || angleDegrees == 180 || angleDegrees == 360) {
-			// Adjust hurtbox to remove outline
-			sf::FloatRect hurtbox = rect->getGlobalBounds();
-			print(outline);
-			hurtbox.width -= outline * 2;
-			hurtbox.height -= outline * 2;
-			hurtbox.left += outline;
-			hurtbox.top += outline;
-
-			return hurtbox.contains(hitboxPos);
-		}
-
-		// Else, use pos.y to calculate the range pos.x would be in to get hit.
-		float targetX1 = ((hitboxPos.y - intercept) / slope) - abs(laserWidth);
-		float targetX2 = ((hitboxPos.y - intercept) / slope) + abs(laserWidth);
-
-		// Find 180 degree wide target angle
-		float angleToPlayer;
-		if (hitboxPos.x == centerPos.x && hitboxPos.y > centerPos.y)
-			angleToPlayer = 90;
-		else if (hitboxPos.x == centerPos.x && hitboxPos.y < centerPos.y)
-			angleToPlayer = 270;
-		else { // Range is (-90, 270)
-			angleToPlayer = atan((centerPos.y - hitboxPos.y) / (centerPos.x - hitboxPos.x)) * 180 / PI;
-			if (hitboxPos.x < centerPos.x)
-				angleToPlayer += 180;
-		}
-		bool inFront = angleToPlayer + 90 < angleDegrees + 180 && angleToPlayer + 90 > angleDegrees;
-		return hitboxPos.x > targetX1 && hitboxPos.x < targetX2 && inFront;
+		SfRectangleAtHome newRec = *rect;
+		newRec.setRotation(0);
+		float angle = rect->getRotation() * PI / 180;
+		sf::Vector2f dist = { hitboxPos.x - centerPos.x, hitboxPos.y - centerPos.y };
+		float mag = sqrt(pow(dist.x, 2) + pow(dist.y, 2));
+		float angle2 = atan(dist.y / dist.x);
+		if (dist.x < 0)
+			angle2 += PI;
+		float newX = centerPos.x + (mag) * cos(angle2 - angle);
+		float newY = centerPos.y + (mag) * sin(angle2 - angle);
+		newRec.alignX();
+		newRec.setPosition(centerPos);
+		sf::FloatRect bounds = newRec.getGlobalBounds();
+		bounds.top += rect->getOutlineThickness();
+		
+		return bounds.contains(newX, newY) || (sqrt(pow(hitboxPos.x - centerPos.x, 2) + pow(hitboxPos.y - centerPos.y, 2)) <= hitbox.getRadius() + maxWidth / 2);
 	}
 };
 

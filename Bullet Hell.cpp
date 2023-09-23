@@ -19,7 +19,7 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addDotBulletR({ 450, 400 }, 0, 0);
     generalBullets->addTalismanBulletR({ 500, 400 }, 0, 0);
     generalBullets->addBubbleBulletR({ 550, 400 }, 0, 0);
-    generalBullets->addLaser({ 400, 200 }, 1, 50, 20, 0.5, BLUE);
+    generalBullets->addLaser({ 400, 200 }, 0, 5, 20, 0, BLUE);
 }
 int main(){
     srand(time(NULL));
@@ -91,8 +91,13 @@ int main(){
                     }   
                 }
 
-                if (event.key.code == sf::Keyboard::Space)
+                if (event.key.code == sf::Keyboard::Space) {
                     manager.rotateAllBullets(30);
+                    break;
+                }
+                if (event.key.code == sf::Keyboard::Z) {
+                    break;
+                }
 
                 break;
             case sf::Event::MouseMoved:
