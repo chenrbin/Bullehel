@@ -21,6 +21,10 @@ public:
 	~Bullet() {
 		delete sprite;
 	}
+	// Some bullet types with specific variables will use this
+	virtual void resetBullet() {
+		return;
+	}
 	// Called to move every frame
 	virtual void processMovement() {
 		sprite->move(xVelocity, yVelocity);
@@ -48,8 +52,21 @@ public:
 		xVelocity += x;
 		yVelocity += y;
 	}
-	virtual void setPosition(sf::Vector2f position) {
-		sprite->setPosition(position);
+	virtual void setPosition(float x, float y) {
+		sprite->setPosition(x, y);
+	}
+	virtual void setVelocity(float x, float y) {
+		xVelocity = x;
+		yVelocity = y;
+	}
+	// Set velocity with polar coordinates
+	void setVelocityR(float speed, float angleDegrees) {
+		xVelocity = speed * cos(angleDegrees * PI / 180);
+		yVelocity = speed * -sin(angleDegrees * PI / 180);
+	}
+	void scaleVelocity(float x, float y) {
+		xVelocity *= x;
+		yVelocity *= y;
 	}
 	// Flip the x coordinate (reflection along the y axis)
 	virtual void flipX() {
@@ -61,7 +78,7 @@ public:
 		sprite->rotate(-sprite->getRotation() * 2);
 		yVelocity *= -1;
 	}
-	// Align sprite rotation based on velocity. Optionally add an offset
+	// Align sprite rotation based on velocity. Used by bullets that aren't circular. Optionally add an offset.
 	void alignAngle() {
 		float angle;
 		if (yVelocity != 0 || xVelocity != 0)
@@ -72,7 +89,6 @@ public:
 			angle += 180;
 		sprite->setRotation(angle);
 	}
-	// Align sprite rotation based on velocity. Optionally add an offset
 	void alignAngle(float xOffset, float yOffset) {
 		float angle;
 		if (yVelocity + yOffset != 0 || xVelocity + xOffset != 0)
@@ -83,21 +99,7 @@ public:
 			angle += 180;
 		sprite->setRotation(angle);
 	}
-	void setVelocity(float x, float y) {
-		xVelocity = x;
-		yVelocity = y;
-	}
-	void scaleVelocity(float x, float y) {
-		xVelocity *= x;
-		yVelocity *= y;
-	}
-	sf::Vector2f getVelocity() {
-		return sf::Vector2f(xVelocity, yVelocity);
-	}
-	// Some bullet types with specific variables will use this
-	virtual void resetBullet() {
-		return;
-	}
+	
 	// Set flags used for certain patterns
 	void setFlag(char val) {
 		flag = val;
@@ -107,6 +109,9 @@ public:
 	}
 	sf::Vector2f getPosition() {
 		return sprite->getPosition();
+	}
+	sf::Vector2f getVelocity() {
+		return sf::Vector2f(xVelocity, yVelocity);
 	}
 	
 	// Actual bullet types will override this. 
@@ -122,6 +127,7 @@ public:
 		sprite = new SfCircleAtHome(WHITE, radius, position, true, color, STANDARDCIRCLEOUTLINE);
 		hitBoxRadius = radius;
 	}
+	// Circular hitbox compares distance with sum of radius
 	bool checkPlayerCollision(sf::CircleShape& playerHitbox) {
 		sf::Vector2f hitBoxPos = playerHitbox.getPosition();
 		sf::Vector2f bulletPos = sprite->getPosition();
@@ -235,7 +241,6 @@ public:
 	// Process the active status and growth of laser
 	virtual void processMovement() {
 		frameCounter++;
-		rotateBullet(1);
 
 		// Return if laser should not be active
 		if (frameCounter / FPS < activationDelay)
@@ -256,6 +261,7 @@ public:
 		}
 		else
 			currentWidth = maxWidth;
+		// Process movement only if velocity is not zero.
 		if (xVelocity != 0 || yVelocity != 0) {
 			centerPos.x += xVelocity;
 			centerPos.y += yVelocity;
@@ -271,7 +277,7 @@ public:
 	}
 	// Adds an offset to position instead of setting it
 	virtual void adjustPosition(float x, float y) {
-		sprite->move(x, y);
+		ComplexBullet::adjustPosition(x, y);
 	}
 	void resetBullet() {
 		frameCounter = 0;
@@ -304,6 +310,7 @@ public:
 		sf::FloatRect bounds = newRec.getGlobalBounds();
 		bounds.top += rect->getOutlineThickness();
 		
+		// Both the hitbox of the rectangle and the circle
 		return bounds.contains(newX, newY) || (sqrt(pow(hitboxPos.x - centerPos.x, 2) + pow(hitboxPos.y - centerPos.y, 2)) <= hitbox.getRadius() + maxWidth / 2);
 	}
 };

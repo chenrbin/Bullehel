@@ -14,11 +14,11 @@ using namespace Constants;
 
 // Add a list of static bullets to the general pattern
 void addTestBullets(Pattern* generalBullets) {
-    generalBullets->addCircleBulletR({ 350, 400 }, 0, 0);
-    generalBullets->addRiceBulletR({ 400, 400 }, 0, 0);
-    generalBullets->addDotBulletR({ 450, 400 }, 0, 0);
-    generalBullets->addTalismanBulletR({ 500, 400 }, 0, 0);
-    generalBullets->addBubbleBulletR({ 550, 400 }, 0, 0);
+    generalBullets->addCircleBullet({ 350, 400 }, 0, 0);
+    generalBullets->addRiceBullet({ 400, 400 }, 0, 0);
+    generalBullets->addDotBullet({ 450, 400 }, 0, 0);
+    generalBullets->addTalismanBullet({ 500, 400 }, 0, 0);
+    generalBullets->addBubbleBullet({ 550, 400 }, 0, 0);
     generalBullets->addLaser({ 400, 200 }, 0, 5, 20, 0, BLUE);
 }
 int main(){

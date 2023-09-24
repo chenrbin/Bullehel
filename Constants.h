@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, samesideaslaser for wide horizontal lasers, review comments
+	// Todo: convex shapes, laser expiration, review comments
 	// more patterns, more bullets
 	// mercury poison, resurrection butterfly, virtue of wind god
 	// Size and dimensions

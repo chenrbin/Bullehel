@@ -50,48 +50,11 @@ public:
 		if (active)
 			frameCounter++;
 	}
-	vector<Bullet*>& getBullets() {
-		return bullets;
-	}
-	void setActive(bool val) {
-		active = val;
-	}
-	bool getActive() {
-		return active;
-	}
-	void setScreenBounds(sf::FloatRect& screenBounds) {
-		this->screenBounds = screenBounds;
-	}
-	// Adds width/height * increaseFactor to each side. Entering 1 will triple width and height
-	void expandBounds(float increaseFactor) {
-		screenBounds.left -= SCREENWIDTH * increaseFactor;
-		screenBounds.top -= SCREENHEIGHT * increaseFactor;
-		screenBounds.width += SCREENWIDTH * 2 * increaseFactor;
-		screenBounds.height += SCREENHEIGHT * 2 * increaseFactor;
-	}
 	// Not used by base class
 	virtual void spawnBullets() {
 		return;
 	}
-	// Compares shotFrequency with frameCounter and is used by spawnBullets to determine when to shoot.
-	bool isGoodToshoot() {
-		int framesPerShot;
-		if (shotFrequency == 0) {
-			framesPerShot = 1;
-			active = false;
-		}
-		else
-			framesPerShot = FPS / shotFrequency;
-		return frameCounter % framesPerShot == 0;
-	}
-	// Reset frame counter
-	void resetCounter() {
-		frameCounter = 0;
-		for (Bullet* bullet : bullets)
-			bullet->resetBullet();
-	}
-
-	// Delete all bullets. Typically paired with resetCounter
+	// Delete all bullets. Typically paired with resetPattern, but not always
 	virtual void deleteAllBullets() {
 		for (Bullet* bullet : bullets)
 			delete bullet;
@@ -108,39 +71,61 @@ public:
 			}
 	}
 
-#pragma region Add bullets
-	// All addBullet functions return a pointer to the bullet create
-// Add circle bullet with velocity in rectangular coordinates
-	void addCircleBullet(sf::Vector2f position, sf::Vector2f velocity, sf::Color color = DEFAULTCIRCLEBULLETCOLOR, int radius = STANDARDCIRCLEBULLETRADIUS) {
-		bullets.push_back(new CircleBullet(position, velocity.x, velocity.y, color, radius));
+	// Reset frame counter
+	void resetPattern() {
+		frameCounter = 0;
+		for (Bullet* bullet : bullets)
+			bullet->resetBullet();
 	}
-	// Add circle bullet with velocity in polar coordinates
-	void addCircleBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTCIRCLEBULLETCOLOR, int radius = STANDARDCIRCLEBULLETRADIUS) {
+	vector<Bullet*>& getBullets() {
+		return bullets;
+	}
+	bool getActive() {
+		return active;
+	}
+	void setActive(bool val) {
+		active = val;
+	}
+	void setScreenBounds(sf::FloatRect& screenBounds) {
+		this->screenBounds = screenBounds;
+	}
+	// Adds width/height * increaseFactor to each side. Entering 1 will triple width and height
+	void expandBounds(float increaseFactor) {
+		screenBounds.left -= SCREENWIDTH * increaseFactor;
+		screenBounds.top -= SCREENHEIGHT * increaseFactor;
+		screenBounds.width += SCREENWIDTH * 2 * increaseFactor;
+		screenBounds.height += SCREENHEIGHT * 2 * increaseFactor;
+	}
+	// Compares shotFrequency with frameCounter and is used by spawnBullets to determine when to shoot.
+	bool isGoodToshoot() {
+		int framesPerShot;
+		if (shotFrequency == 0) {
+			framesPerShot = 1;
+			active = false;
+		}
+		else
+			framesPerShot = FPS / shotFrequency;
+		return frameCounter % framesPerShot == 0;
+	}
+	// All addBullet functions use a source position and polar coordinates
+	void addCircleBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTCIRCLEBULLETCOLOR, int radius = STANDARDCIRCLEBULLETRADIUS) {
 		bullets.push_back(new CircleBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
 	}
-	// Add rice bullet with velocity in polar coordinates
-	void addRiceBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTRICEBULLETCOLOR, int radius = STANDARDRICEBULLETRADIUS) {
+	void addRiceBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTRICEBULLETCOLOR, int radius = STANDARDRICEBULLETRADIUS) {
 		bullets.push_back(new RiceBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
 	}
-	// Add rice bullet with velocity in polar coordinates
-	void addDotBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTDOTBULLETCOLOR, int radius = STANDARDDOTBULLETRADIUS) {
+	void addDotBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTDOTBULLETCOLOR, int radius = STANDARDDOTBULLETRADIUS) {
 		bullets.push_back(new DotBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
 	}
-	// Add talisman bullet with velocity in polar coordinates
-	void addTalismanBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTTALISMANBULLETCOLOR, int radius = STANDARDTALISMANBULLETRADIUS) {
+	void addTalismanBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTTALISMANBULLETCOLOR, int radius = STANDARDTALISMANBULLETRADIUS) {
 		bullets.push_back(new TalismanBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
 	}
-	// Add bubble bullet with velocity in polar coordinates
-	void addBubbleBulletR(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTBUBBLEBULLETCOLOR, int radius = STANDARDBUBBLEBULLETRADIUS) {
+	void addBubbleBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTBUBBLEBULLETCOLOR, int radius = STANDARDBUBBLEBULLETRADIUS) {
 		bullets.push_back(new BubbleBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
 	}
-	// Add laser with start position and angle
 	void addLaser(sf::Vector2f position, float angleDegrees = 0, float maxWidth = 0, float growthSpeed = 1, float activationDelay = 0, sf::Color color = DEFAULTLASERCOLOR) {
 		bullets.push_back(new Laser(position, angleDegrees, maxWidth, growthSpeed, activationDelay, color));
 	}
-
-#pragma endregion
-
 };
 
 // Direct stream with accelerating angle velocity
@@ -161,7 +146,7 @@ public:
 		if (isGoodToshoot()) {
 			int num = offset + angleVelocity * frameCounter / FPS + angleAcceleration * pow(frameCounter / FPS, 2);
 			for (int i = 0; i < streamCount; i++)
-				addRiceBulletR(sourcePos, baseSpeed, num + i * 360 / streamCount);
+				addRiceBullet(sourcePos, baseSpeed, num + i * 360 / streamCount);
 		}
 	}
 
@@ -183,14 +168,11 @@ public:
 			if (!bounceBounds.contains(pos)) {
 				if (pos.y > bounceBounds.top + bounceBounds.height)
 					continue;
-				if (bullet->getFlag() != BOUNCED && (pos.x < bounceBounds.left || pos.x > bounceBounds.left + bounceBounds.width)) {
+				if (bullet->getFlag() != BOUNCED && (pos.x < bounceBounds.left || pos.x > bounceBounds.left + bounceBounds.width)) 
 					bullet->flipX();
-					bullet->setFlag(BOUNCED);
-				}
-				else if (pos.y < bounceBounds.top) {
+				else if (pos.y < bounceBounds.top) 
 					bullet->flipY();
-					bullet->setFlag(BOUNCED);
-				}
+				bullet->setFlag(BOUNCED);
 			}
 		}
 	}
@@ -206,7 +188,7 @@ public:
 			else // Fixed position for first shot
 				shotSource = sourcePos;
 			for (int i = 0; i < streamCount; i++)
-				addRiceBulletR(shotSource, baseSpeed, shotAngle + i * 360 / streamCount, BLUE);
+				addRiceBullet(shotSource, baseSpeed, shotAngle + i * 360 / streamCount, BLUE);
 		}
 	}
 };
@@ -234,41 +216,35 @@ public:
 		expandBounds(1);
 	}
 	void processMovement() {
+		if (!active)
+			return;
 		// Increment wave frame timers
 		for (int& counter : waveFrameCount)
 			counter++;
 
 		int index = 0; // For keeping track of each bullet in each wave
-		// Process movement and ring expansion through decreased rotation speed
+		// Process movement and ring expansion through rotation speed
 		for (int wave = 0; wave < waveBulletCount.size(); wave++) {
 			// Bigger number means bigger circle
-			const float PHASE2VELOCITY = 90;
-			const float PHASE3VELOCITY = -20;
-
+			const float PHASE2VELOCITY = 90, PHASE3VELOCITY = -20;
 			const int PHASE1CHECKPOINT = 60, PHASE2CHECKPOINT = 360;
 
-			// Calculate starting velocity and acceleration using target radius and acceleration after phase 1
-			float targetPos = 180;
-			float targetVel = 45;
-			float targetTime = 1;
+			// Calculate starting velocity and acceleration using target radius, velocity, and time after phase 1
+			float targetPos = 180, targetVel = 45, targetTime = 1;
 			float accel = (targetTime * targetVel - targetPos) / targetTime / targetTime;
 			float startVel = targetVel - 2 * accel * targetTime;
 
 			float targetRadius = 0;
 			// Determine speed of ring expansion
-			if (waveFrameCount[wave] < PHASE1CHECKPOINT) {
+			if (waveFrameCount[wave] < PHASE1CHECKPOINT) 
 				targetRadius = baseCircleRadius + waveFrameCount[wave] / FPS * startVel + pow(waveFrameCount[wave] / FPS, 2) * accel;
-			}
-			else if (waveFrameCount[wave] < PHASE2CHECKPOINT) {
+			else if (waveFrameCount[wave] < PHASE2CHECKPOINT) 
 				targetRadius = baseCircleRadius + PHASE1CHECKPOINT / FPS * startVel + pow(PHASE1CHECKPOINT / FPS, 2) * accel + (waveFrameCount[wave] - PHASE1CHECKPOINT) / FPS * PHASE2VELOCITY;
-			}
-			else {
+			else 
 				targetRadius = baseCircleRadius + PHASE1CHECKPOINT / FPS * startVel + pow(PHASE1CHECKPOINT / FPS, 2) * accel + (PHASE2CHECKPOINT - PHASE1CHECKPOINT) / FPS * PHASE2VELOCITY + (waveFrameCount[wave] - PHASE2CHECKPOINT) / FPS * PHASE3VELOCITY;
-			}
 			// Rotate each wave
 			for (int j = 0; j < waveBulletCount[wave]; j++) {
 				Bullet* bullet = bullets[index];
-
 				bullet->processMovement();
 				if (bullet->getFlag() == NEUTRAL)
 					bullet->rotateBullet(baseSpeed * 360 / (2 * PI * (targetRadius)));
@@ -277,10 +253,8 @@ public:
 				index++;
 				if (waveFrameCount[wave] < PHASE2CHECKPOINT)
 					bullet->adjustPosition(0, 1);
-				else
+				else // Speed up descent after phase 2
 					bullet->adjustPosition(0, 1.1);
-
-
 			}
 		}
 
@@ -289,23 +263,19 @@ public:
 		if (!active)
 			return;
 		int shotAngle = rand() % 360;
-		shotAngle = 90;
 		int sourceCount = 0;
 		if (isGoodToshoot()) {
 			for (sf::Vector2f pos : shotSources) {
 				int index = bullets.size(); // Save index to set flags
 				for (int i = 0; i < streamCount; i++) {
-					addTalismanBulletR({ pos.x + cos((shotAngle + i * 360.f / streamCount + 90) * PI / 180) * baseCircleRadius, pos.y + sin((shotAngle + i * 360.f / streamCount - 90) * PI / 180) * baseCircleRadius }, baseSpeed, shotAngle + i * 360 / streamCount, RED);
+					addTalismanBullet({ pos.x + cos((shotAngle + i * 360.f / streamCount + 90) * PI / 180) * baseCircleRadius, pos.y + sin((shotAngle + i * 360.f / streamCount - 90) * PI / 180) * baseCircleRadius }, baseSpeed, shotAngle + i * 360 / streamCount, RED);
 				}
 				bool alternateCondition = pos.x > sourcePos.x ^ pos.y > sourcePos.y;
-				if (alternate)
-					alternateCondition = !alternateCondition;
-				if (alternateCondition) {
-					for (; index < bullets.size(); index++) {
+				if (alternate) // Alternate decides a specific shotSource's rotation
+					alternateCondition = !alternateCondition; // alternateCondition reverses half of the sources' rotation
+				if (alternateCondition) 
+					for (; index < bullets.size(); index++) 
 						bullets[index]->setFlag(REVERSEROTATION);
-						bullets[index]->rotateBullet(180);
-					}
-				}
 
 				sourceCount++;
 				if (sourceCount == shotSources.size() / 2) // Reroll rng
@@ -315,7 +285,6 @@ public:
 			waveBulletCount.push_back(shotSources.size() * streamCount);
 			waveFrameCount.push_back(0);
 			alternate = !alternate;
-
 		}
 	}
 	virtual void deleteAllBullets() {
@@ -349,6 +318,7 @@ public:
 	}
 };
 
+// Simple but fast bullet rings 
 class GengetsuTime : public Pattern {
 public:
 	GengetsuTime(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
@@ -364,9 +334,9 @@ public:
 			sf::Vector2f shotSource = { sourcePos.x + rand() % 200 - 100, sourcePos.y + rand() % 100 - 50 };
 			for (int i = 0; i < streamCount; i++) {
 				if (useDotBullets)
-					addDotBulletR(shotSource, baseSpeed, shotAngle + i * 360 / streamCount);
+					addDotBullet(shotSource, baseSpeed, shotAngle + i * 360 / streamCount);
 				else
-					addCircleBulletR(shotSource, baseSpeed, shotAngle + i * 360 / streamCount, BLUE);
+					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360 / streamCount, BLUE);
 			}
 		}
 	}
@@ -386,47 +356,33 @@ public:
 		for (Pattern* pattern : activePatterns)
 			delete pattern;
 	}
-	// Checks that will occur every frame
-	void doStuff() {
-		deleteOutOfBoundsBullets();
-		spawnPatterns();
-		processMovement();
-	}
 	// Adds a pattern to the manager. Patterns can either spawn bullets from an algorithm or function call.
 	void addPattern(Pattern* pattern) {
 		activePatterns.push_back(pattern);
 	}
-	void spawnPatterns() {
-		for (Pattern* pattern : activePatterns)
+	// Call every frame. Delete, spawn, and move bullets
+	void doStuff() {
+		for (Pattern* pattern : activePatterns) {
+			pattern->deleteOutOfBoundsBullets();
 			pattern->spawnBullets();
+			pattern->incrementFrame();
+			pattern->processMovement();
+
+		}
 	}
 	// Deactive all patterns and reset their counters
 	void deactivateAllPatterns() {
 		for (int i = 0; i < activePatterns.size(); i++) {
 			activePatterns[i]->setActive(false);
-			activePatterns[i]->resetCounter();
+			activePatterns[i]->resetPattern();
 			if (i != 0) // Do not delete test bullets
 				activePatterns[i]->deleteAllBullets();
-		}
-	}
-
-	// Call this function every frame to move bullets
-	void processMovement() {
-		for (Pattern* pattern : activePatterns) {
-			pattern->incrementFrame();
-			pattern->processMovement();
 		}
 	}
 	void rotateAllBullets(float angleDegrees) {
 		for (Pattern* pattern : activePatterns)
 			for (Bullet* bullet : pattern->getBullets())
 				bullet->rotateBullet(angleDegrees);
-	}
-	// Delete any bullets that are out of bounds
-	void deleteOutOfBoundsBullets() {
-		for (Pattern* pattern : activePatterns) {
-			pattern->deleteOutOfBoundsBullets();
-		}
 	}
 	// Check if player hitbox has collided with any bullets
 	bool checkPlayerCollision(sf::CircleShape& hitbox) {
@@ -443,6 +399,5 @@ public:
 	Pattern* operator[](int index) {
 		return activePatterns[index];
 	}
-
 };
 

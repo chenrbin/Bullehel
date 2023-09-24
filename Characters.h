@@ -27,6 +27,7 @@ public:
 	}
 	void move(sf::Vector2f vec) {
 		hitbox.move(vec.x, vec.y);
+		// Bound check
 		if (getPosition().x < movementBounds.left)
 			hitbox.setPosition(movementBounds.left, getPosition().y);
 		else if (getPosition().x > movementBounds.left + movementBounds.width)
@@ -68,7 +69,7 @@ public:
 		movementBounds = bounds;
 		movementBounds.height -= hitboxRadius * 2, movementBounds.width -= hitboxRadius * 2;
 		movementBounds.top += hitboxRadius, movementBounds.left += hitboxRadius;
-		// If hitbox is outside of bounds, move in bound.
+		// If hitbox is outside of bounds when setting, move in bound.
 		if (!bounds.contains(getPosition())) {
 			hitbox.setPosition(movementBounds.left + movementBounds.width * 0.5f, movementBounds.top + movementBounds.height * 0.8f);
 			playerSprite.setPosition(hitbox.getPosition());
