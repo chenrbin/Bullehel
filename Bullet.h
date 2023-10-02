@@ -357,6 +357,20 @@ public:
 		extraSprites.push_back(new SfCircleAtHome(TRANSPARENT, radius * 1.9, position, true, TRANSPARENTWHITE, radius * 0.75));
 	}
 };
+// Special type of bullet that optionally has a hitbox. Used as a transformable sprite to track bullet spawn positions.
+class Spawner : public CircleBullet{
+public:
+	Spawner(sf::Vector2f position = SCREENPOS, float xVelocity = 0, float yVelocity = 0, sf::Color color = WHITE, int radius = 0)
+		: CircleBullet(position, xVelocity, yVelocity, color, radius), Bullet(xVelocity, yVelocity) {
+		sprite->setFillColor(color);
+		sprite->setOutlineThickness(SMALLBULLETOUTLINE);
+	}
+	bool checkPlayerCollision(sf::CircleShape& playerHitbox) {
+		if (!flag) // Flag indicates whether hitbox is active
+			return false;
+		CircleBullet::checkPlayerCollision(playerHitbox);
+	}
+};
  
 
 #pragma endregion

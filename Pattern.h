@@ -126,6 +126,9 @@ public:
 	void addLaser(sf::Vector2f position, float angleDegrees = 0, float maxWidth = 0, float growthSpeed = 1, float activationDelay = 0, sf::Color color = DEFAULTLASERCOLOR) {
 		bullets.push_back(new Laser(position, angleDegrees, maxWidth, growthSpeed, activationDelay, color));
 	}
+	void addSpawner(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTSPAWNERCOLOR, int radius = STANDARDSPAWNERRADIUS) {
+		bullets.push_back(new Spawner(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
+	}
 };
 
 // Direct stream with accelerating angle velocity
@@ -339,6 +342,17 @@ public:
 					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360 / streamCount, BLUE);
 			}
 		}
+	}
+};
+
+// Floral pattern spawns
+class WindGod : public Pattern{
+	vector<Spawner*> spawners;
+public:
+	WindGod(float duration = 0, int streamCount = 0, float shotFrequency = 0, float baseSpeed = 0, sf::Vector2f sourcePos = SCREENPOS)
+		:Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
+		// There will be 15 spawners persistent as the first 15 items in the bullet vector
+
 	}
 };
 

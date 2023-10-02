@@ -20,6 +20,7 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addTalismanBullet({ 500, 400 }, 0, 0);
     generalBullets->addBubbleBullet({ 550, 400 }, 0, 0);
     generalBullets->addLaser({ 400, 200 }, 0, 5, 20, 0, BLUE);
+    generalBullets->addSpawner({ 300, 400 }, 0, 0);
 }
 int main(){
     srand(time(NULL));

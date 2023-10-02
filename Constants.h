@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, laser expiration, review comments
+	// Todo: convex shapes, laser expiration, review comments, MoF customizable variables
 	// more patterns, more bullets
 	// mercury poison, resurrection butterfly, virtue of wind god
 	// Size and dimensions
@@ -21,8 +21,9 @@ namespace Constants {
 	const int STANDARDDOTBULLETRADIUS = 4;
 	const int STANDARDTALISMANBULLETRADIUS = 4;
 	const int STANDARDBUBBLEBULLETRADIUS = 15;
+	const int STANDARDSPAWNERRADIUS = 4;
 	const int STARTINGLASEROUTLINE = 1;
-	const int FINALLASEROUTLINE = 2;
+	const int FINALLASEROUTLINE = 2; // Not used currently
 	
 	// Object positions
 	const sf::Vector2f SCREENPOS(SCREENLEFT, SCREENTOP);
@@ -58,6 +59,7 @@ namespace Constants {
 	const sf::Color DEFAULTTALISMANBULLETCOLOR = MAGENTA;
 	const sf::Color DEFAULTBUBBLEBULLETCOLOR = RED;
 	const sf::Color DEFAULTLASERCOLOR = BLUE;
+	const sf::Color DEFAULTSPAWNERCOLOR = SEETHROUGH;
 
 
 	const float PI = 3.14159;
