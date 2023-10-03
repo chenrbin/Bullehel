@@ -19,11 +19,11 @@ using namespace Constants;
 // Add a list of static bullets to the general pattern
 void addTestBullets(Pattern* generalBullets) {
     generalBullets->addCircleBullet({ 350, 400 }, 0, 0);
-    generalBullets->addRiceBullet({ 400, 400 }, 0, 0);
+    generalBullets->addRiceBullet({ 400, 400 }, 0, 90);
     generalBullets->addDotBullet({ 450, 400 }, 0, 0);
-    generalBullets->addTalismanBullet({ 500, 400 }, 0, 0);
+    generalBullets->addTalismanBullet({ 500, 400 }, 0, 90);
     generalBullets->addBubbleBullet({ 550, 400 }, 0, 0);
-    generalBullets->addLaser({ 400, 200 }, 0, 5, 20, 0, BLUE);
+    generalBullets->addLaser({ 400, 200 }, 90, 5, 20, 0.25, 3, BLUE);
     generalBullets->addSpawner({ 300, 400 }, 0, 0);
 }
 int main(){
@@ -55,7 +55,7 @@ int main(){
 
     manager.addPattern(generalBullets);
     manager.addPattern(new Bowap(5, 150, -100, 8, { 400, 400 }, 30, 6));
-    manager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3));
+    manager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3)); // 80
     manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2));
     manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
     manager.addPattern(new WindGod(40, { 400, 300 }, 0.5, 8));

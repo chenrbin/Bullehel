@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, laser expiration, review comments, MoF customizable variables
+	// Todo: convex shapes, arrowhead bullet, review comments, MoF customizable variables
 	// more patterns, more bullets
 	// mercury poison, resurrection butterfly, virtue of wind god
 	// Size and dimensions
@@ -13,18 +13,17 @@ namespace Constants {
 	const int BORDERMARGIN = WINDOWWIDTH; // The margin where game objects exist but are not seen. Past this is out of bounds
 	
 	// Sprite variables
-	const int STANDARDCIRCLEOUTLINE = 2;
+	const float STANDARDCIRCLEOUTLINE = 2;
 	const float SMALLBULLETOUTLINE = 0.5;
-	const int PLAYERHITBOXRADIUS = 4;
-	const int STANDARDCIRCLEBULLETRADIUS = 6;
-	const int STANDARDRICEBULLETRADIUS = 4;
-	const int STANDARDDOTBULLETRADIUS = 4;
-	const int STANDARDTALISMANBULLETRADIUS = 4;
-	const int STANDARDBUBBLEBULLETRADIUS = 15;
-	const int STANDARDSPAWNERRADIUS = 4;
-	const int STARTINGLASEROUTLINE = 1;
-	const int FINALLASEROUTLINE = 2; // Not used currently
-	
+	const float PLAYERHITBOXRADIUS = 4;
+	const float STANDARDCIRCLEBULLETRADIUS = 6;
+	const float STANDARDRICEBULLETRADIUS = 4;
+	const float STANDARDDOTBULLETRADIUS = 4;
+	const float STANDARDTALISMANBULLETRADIUS = 4;
+	const float STANDARDBUBBLEBULLETRADIUS = 15;
+	const float STANDARDSPAWNERRADIUS = 4;
+	const float STARTINGLASEROUTLINE = 1;
+	const float FINALLASEROUTLINE = 2; // Not used currently
 	// Object positions
 	const sf::Vector2f SCREENPOS(SCREENLEFT, SCREENTOP);
 	const sf::Vector2f FPSTEXTPOS(SCREENLEFT + SCREENWIDTH - 50, SCREENTOP + SCREENHEIGHT - 50 );
@@ -34,7 +33,11 @@ namespace Constants {
 	const float FPS = 60;
 
 	// Pattern constants
-	
+	// BOWAP
+	const float BOWAP_ANGLEOFFSET = 5, BOWAP_ANGLEVELOCITY = 150, BOWAP_ANGLEACCELERATION = -100;
+	// QED 
+	const int QED_VARIANCEX = 400, QED_VARIANCEY = 200; // Length range where bullets can spawn
+
 	// Flying Saucer
 	// A bunch of variables that go into calculating rate of change in target radius. 
 	// Calculated by using calculus on a quadratic equation, s(x) = Ax^2 + Bx
@@ -75,6 +78,7 @@ namespace Constants {
 	const sf::Color TRANSPARENT(0, 0, 0, 0);
 	const sf::Color SEETHROUGH(255, 255, 255, 100);
 	const sf::Color MAGENTA(255, 0, 255);
+
 	// Default colors
 	const sf::Color DEFAULTCIRCLEBULLETCOLOR = RED;
 	const sf::Color DEFAULTRICEBULLETCOLOR = MAGENTA;

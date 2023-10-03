@@ -14,7 +14,7 @@ protected:
 	float baseSpeed;
 	sf::Vector2f sourcePos;
 	// Amount of shots per second, up to the framerate. FPS / shotFrequency = frames per shot
-	// Shoots only once if set to zero
+	// Shoots only once if set to zero. Max is 60 (shoots every frame)
 	float shotFrequency;
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		if (active)
@@ -50,7 +50,7 @@ public:
 		if (active)
 			frameCounter++;
 	}
-	// Not used by base class
+	// Base class does nothing
 	virtual void spawnBullets() {
 		return;
 	}
@@ -109,50 +109,43 @@ public:
 	}
 	// All addBullet functions use a source position and polar coordinates
 	void addCircleBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTCIRCLEBULLETCOLOR, int radius = STANDARDCIRCLEBULLETRADIUS) {
-		bullets.push_back(new CircleBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
+		bullets.push_back(new CircleBullet(position, speed, angleDegrees, color, radius));
 	}
 	void addRiceBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTRICEBULLETCOLOR, int radius = STANDARDRICEBULLETRADIUS) {
-		bullets.push_back(new RiceBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
+		bullets.push_back(new RiceBullet(position, speed, angleDegrees, color, radius));
 	}
 	void addDotBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTDOTBULLETCOLOR, int radius = STANDARDDOTBULLETRADIUS) {
-		bullets.push_back(new DotBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
+		bullets.push_back(new DotBullet(position, speed, angleDegrees, color, radius));
 	}
 	void addTalismanBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTTALISMANBULLETCOLOR, int radius = STANDARDTALISMANBULLETRADIUS) {
-		bullets.push_back(new TalismanBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
+		bullets.push_back(new TalismanBullet(position, speed, angleDegrees, color, radius));
 	}
 	void addBubbleBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTBUBBLEBULLETCOLOR, int radius = STANDARDBUBBLEBULLETRADIUS) {
-		bullets.push_back(new BubbleBullet(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
+		bullets.push_back(new BubbleBullet(position, speed, angleDegrees, color, radius));
 	}
-	void addLaser(sf::Vector2f position, float angleDegrees = 0, float maxWidth = 0, float growthSpeed = 1, float activationDelay = 0, sf::Color color = DEFAULTLASERCOLOR) {
-		bullets.push_back(new Laser(position, angleDegrees, maxWidth, growthSpeed, activationDelay, color));
+	void addLaser(sf::Vector2f position, float angleDegrees = 0, float maxWidth = 0, float growthSpeed = 1, float activationDelay = 0, float activeDuration = 0, sf::Color color = DEFAULTLASERCOLOR) {
+		bullets.push_back(new Laser(position, angleDegrees, maxWidth, growthSpeed, activationDelay, activeDuration, color));
 	}
 	void addSpawner(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTSPAWNERCOLOR, int radius = STANDARDSPAWNERRADIUS) {
-		bullets.push_back(new Spawner(position, speed * cos(angleDegrees * PI / 180), speed * -sin(angleDegrees * PI / 180), color, radius));
+		bullets.push_back(new Spawner(position, speed, angleDegrees, color, radius));
 	}
 };
 
 // Direct stream with accelerating angle velocity
 class Bowap : public Pattern {
-	float offset;
-	float angleVelocity;
-	float angleAcceleration;
 public:
-	Bowap(float offset, float angleVelocity, float angleAcceleration, int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
-		: Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
-		this->offset = offset;
-		this->angleVelocity = angleVelocity;
-		this->angleAcceleration = angleAcceleration;
-	}
+	Bowap(float BOWAP_ANGLEOFFSET, float BOWAP_ANGLEVELOCITY, float BOWAP_ANGLEACCELERATION, int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
+		: Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {}
 	void spawnBullets() {
 		if (!active)
 			return;
 		if (isGoodToshoot()) {
-			int num = offset + angleVelocity * frameCounter / FPS + angleAcceleration * pow(frameCounter / FPS, 2);
+			// Rotation is constant. Bullet count, frequency, and speed can be set.
+			int num = BOWAP_ANGLEOFFSET + BOWAP_ANGLEVELOCITY * frameCounter / FPS + BOWAP_ANGLEACCELERATION * pow(frameCounter / FPS, 2);
 			for (int i = 0; i < streamCount; i++)
 				addRiceBullet(sourcePos, baseSpeed, num + i * 360 / streamCount);
 		}
 	}
-
 };
 
 // Ring of bullets, bounces off top left right walls once.
@@ -187,7 +180,7 @@ public:
 			int shotAngle = rand() % 360;
 			sf::Vector2f shotSource;
 			if (frameCounter != 0)
-				shotSource = { sourcePos.x + rand() % 400 - 200, sourcePos.y + rand() % 200 - 100 };
+				shotSource = { sourcePos.x + rand() % QED_VARIANCEX - QED_VARIANCEX / 2, sourcePos.y + rand() % QED_VARIANCEY - QED_VARIANCEY / 2 };
 			else // Fixed position for first shot
 				shotSource = sourcePos;
 			for (int i = 0; i < streamCount; i++)
@@ -380,7 +373,7 @@ public:
 			if (frameCounter > spawn1 + cycleTime * FPS)
 				bullets[i]->setVelocity(0, 0);
 			bullets[i]->rotateBullet(baseSpeed * 360 / (2 * PI * (80)));
-			addTalismanBullet(bullets[i]->getPosition(), 0, (5 * 360 / (2 * PI * (80))) + frameCounter, RED);
+			addTalismanBullet(bullets[i]->getPosition(), 0, 90, RED);
 		}
 		for (Bullet* bullet : bullets) {
 			bullet->processMovement();
