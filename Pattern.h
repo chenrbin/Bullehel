@@ -198,9 +198,9 @@ public:
 
 // Ring of bullets that along an imaginary circle that moves down and expands
 class FlyingSaucer : public Pattern {
-	float baseCircleRadius;
 	bool alternate; // Alternate rotation
 	vector<sf::Vector2f> shotSources;
+	// Wave counters organize the bullets and allow manipulation of individual waves
 	vector<int> waveBulletCount; // Stores the number of remaining bullets per wave
 	vector<int> waveFrameCount; // Stores the time each wave has been active
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -208,9 +208,8 @@ class FlyingSaucer : public Pattern {
 			target.draw(*bullet, states);
 	}
 public:
-	FlyingSaucer(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float baseCircleRadius, float duration = 0)
+	FlyingSaucer(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
 		:Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
-		this->baseCircleRadius = baseCircleRadius;
 		alternate = false;
 		shotSources.push_back({ sourcePos.x - 180, sourcePos.y + 50 });
 		shotSources.push_back({ sourcePos.x + 180, sourcePos.y + 50 });
@@ -228,33 +227,25 @@ public:
 		int index = 0; // For keeping track of each bullet in each wave
 		// Process movement and ring expansion through rotation speed
 		for (int wave = 0; wave < waveBulletCount.size(); wave++) {
-			// Bigger number means bigger circle
-			const float PHASE2VELOCITY = 90, PHASE3VELOCITY = -20;
-			const int PHASE1CHECKPOINT = 60, PHASE2CHECKPOINT = 360;
-
-			// Calculate starting velocity and acceleration using target radius, velocity, and time after phase 1
-			float targetPos = 180, targetVel = 45, targetTime = 1;
-			float accel = (targetTime * targetVel - targetPos) / targetTime / targetTime;
-			float startVel = targetVel - 2 * accel * targetTime;
-
+			// Calculate circle radius based on desire behavior. See pattern constants in Constants.h
 			float targetRadius = 0;
 			// Determine speed of ring expansion
-			if (waveFrameCount[wave] < PHASE1CHECKPOINT) 
-				targetRadius = baseCircleRadius + waveFrameCount[wave] / FPS * startVel + pow(waveFrameCount[wave] / FPS, 2) * accel;
-			else if (waveFrameCount[wave] < PHASE2CHECKPOINT) 
-				targetRadius = baseCircleRadius + PHASE1CHECKPOINT / FPS * startVel + pow(PHASE1CHECKPOINT / FPS, 2) * accel + (waveFrameCount[wave] - PHASE1CHECKPOINT) / FPS * PHASE2VELOCITY;
+			if (waveFrameCount[wave] < UFO_PHASE1CHECKPOINT) 
+				targetRadius = waveFrameCount[wave] / FPS * UFO_STARTVEL + pow(waveFrameCount[wave] / FPS, 2) * UFO_PHASE1ACCEL;
+			else if (waveFrameCount[wave] < UFO_PHASE2CHECKPOINT) 
+				targetRadius = (waveFrameCount[wave] - UFO_PHASE1CHECKPOINT) / FPS * UFO_PHASE2VELOCITY + UFO_PHASE1ADDEDRADIUS;
 			else 
-				targetRadius = baseCircleRadius + PHASE1CHECKPOINT / FPS * startVel + pow(PHASE1CHECKPOINT / FPS, 2) * accel + (PHASE2CHECKPOINT - PHASE1CHECKPOINT) / FPS * PHASE2VELOCITY + (waveFrameCount[wave] - PHASE2CHECKPOINT) / FPS * PHASE3VELOCITY;
+				targetRadius = (waveFrameCount[wave] - UFO_PHASE2CHECKPOINT) / FPS * UFO_PHASE3VELOCITY + UFO_PHASE1ADDEDRADIUS + UFO_PHASE2ADDEDRADIUS;
 			// Rotate each wave
 			for (int j = 0; j < waveBulletCount[wave]; j++) {
 				Bullet* bullet = bullets[index];
 				bullet->processMovement();
 				if (bullet->getFlag() == NEUTRAL)
-					bullet->rotateBullet(baseSpeed * 360 / (2 * PI * (targetRadius)));
+					bullet->rotateArc(targetRadius, baseSpeed);
 				else
-					bullet->rotateBullet(-baseSpeed * 360 / (2 * PI * (targetRadius)));
+					bullet->rotateArc(targetRadius, -baseSpeed);
 				index++;
-				if (waveFrameCount[wave] < PHASE2CHECKPOINT)
+				if (waveFrameCount[wave] < UFO_PHASE2CHECKPOINT)
 					bullet->adjustPosition(0, 1);
 				else // Speed up descent after phase 2
 					bullet->adjustPosition(0, 1.1);
@@ -271,12 +262,12 @@ public:
 			for (sf::Vector2f pos : shotSources) {
 				int index = bullets.size(); // Save index to set flags
 				for (int i = 0; i < streamCount; i++) {
-					addTalismanBullet({ pos.x + cos((shotAngle + i * 360.f / streamCount + 90) * PI / 180) * baseCircleRadius, pos.y + sin((shotAngle + i * 360.f / streamCount - 90) * PI / 180) * baseCircleRadius }, baseSpeed, shotAngle + i * 360 / streamCount, RED);
+					addTalismanBullet(pos, baseSpeed, shotAngle + i * 360 / streamCount, RED);
 				}
 				bool alternateCondition = pos.x > sourcePos.x ^ pos.y > sourcePos.y;
 				if (alternate) // Alternate decides a specific shotSource's rotation
 					alternateCondition = !alternateCondition; // alternateCondition reverses half of the sources' rotation
-				if (alternateCondition) 
+				if (alternateCondition) // Index goes from size before adding batch to after adding. Effectively accesses the new batch
 					for (; index < bullets.size(); index++) 
 						bullets[index]->setFlag(REVERSEROTATION);
 
@@ -284,7 +275,7 @@ public:
 				if (sourceCount == shotSources.size() / 2) // Reroll rng
 					shotAngle = rand() % 360;
 			}
-
+			// Add to the wave counters
 			waveBulletCount.push_back(shotSources.size() * streamCount);
 			waveFrameCount.push_back(0);
 			alternate = !alternate;
@@ -296,6 +287,7 @@ public:
 		waveFrameCount.clear();
 	}
 	void deleteOutOfBoundsBullets() {
+		// Delete out of bound bullets while keeping sync with wave counters
 		for (int i = 0; i < bullets.size(); i++)
 			if (!screenBounds.contains(bullets[i]->getPosition())) {
 				Bullet* temp = bullets[i];
@@ -348,12 +340,53 @@ public:
 // Floral pattern spawns
 class WindGod : public Pattern{
 	vector<Spawner*> spawners;
+	float cycleTime; // Frames to draw a circle
+	float cycleSpeed; // Spawner speed
+	float radius1;	// Inner circle radius
+	float spawn1; // Time point where inner spawners became active
+	float circleCut = 0.1; // Percentage of circle cut from spawning pattern
+	float offsetFrame; // Frames to advance to cut circle
 public:
-	WindGod(float duration = 0, int streamCount = 0, float shotFrequency = 0, float baseSpeed = 0, sf::Vector2f sourcePos = SCREENPOS)
+	WindGod(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
 		:Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
-		// There will be 15 spawners persistent as the first 15 items in the bullet vector
-
+		spawn1 = 0;
+		cycleTime = 1;
+		radius1 = 80;
+		cycleSpeed = (2 * PI * radius1) / (cycleTime * FPS);
+		offsetFrame = circleCut * cycleTime * FPS;
+		cout << offsetFrame;
+		this->baseSpeed = cycleSpeed;
 	}
+	void spawnBullets() {
+		// There will be 15 spawners persistent as the first 15 items in the bullet vector
+		// add circle formula for spawner positions
+		if (isGoodToshoot()) {
+			deleteAllBullets();
+			spawn1 = frameCounter - offsetFrame * 2;
+			for (int i = 0; i < 5; i++)
+				addSpawner(sourcePos, baseSpeed, 360 / 5 * i + 180);
+			for (int i = 0; i < 5; i++) {
+				for (int j = 0; j < offsetFrame; j++)
+				{
+					bullets[i]->rotateArc(80, baseSpeed);
+					bullets[i]->processMovement();
+				}
+			}
+		}
+	}
+	void processMovement() {
+		for (int i = 0; i < 5; i++)
+		{	
+			if (frameCounter > spawn1 + cycleTime * FPS)
+				bullets[i]->setVelocity(0, 0);
+			bullets[i]->rotateBullet(baseSpeed * 360 / (2 * PI * (80)));
+			addTalismanBullet(bullets[i]->getPosition(), 0, (5 * 360 / (2 * PI * (80))) + frameCounter, RED);
+		}
+		for (Bullet* bullet : bullets) {
+			bullet->processMovement();
+		}
+	}
+	
 };
 
 // Manager for all patterns. Will be called by main, GameScreen, and others.

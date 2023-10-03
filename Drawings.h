@@ -126,7 +126,7 @@ public:
 	}
 	// Update cursor position to the left of the text it is pointing to
 	void updateCursor() {
-		cursor.setPosition(texts[cursorPos].getPosition().x - 5, texts[cursorPos].getPosition().y);
+		cursor.setPosition(texts[cursorPos].getPosition().x - 5, texts[cursorPos].getPosition().y + 5);
 	}
 	// Update cursor based on mouse position. Return true if a text is selected
 	bool updateMouseClick(int x, int y) {

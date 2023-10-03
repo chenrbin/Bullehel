@@ -33,9 +33,32 @@ namespace Constants {
 	const float PLAYERSTANDARDSPEED = 6, FOCUSSPEEDMODIFIER = 0.5f;
 	const float FPS = 60;
 
-	// Bullet flags
-	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1;
+	// Pattern constants
+	
+	// Flying Saucer
+	// A bunch of variables that go into calculating rate of change in target radius. 
+	// Calculated by using calculus on a quadratic equation, s(x) = Ax^2 + Bx
+	// x = frameCounter (time), A = acceleration, B = velocity. Intercept is zero since circle grows from radius 0
+	// v(x) = 2Ax + B; Radius growth velocity
+	// a(x) = 2A; Radius growth acceleration
+	// At x = t = TARGETTIME, s(t) = TARGETPOS = At^2 + Bt, v(s) = TARGETVEL = 2At + B
+	// B = TARGETVEL - 2At, TARGETPOS = At^2 + (TARGETVEL - 2At) * t = At^2 + TARGETVEL * t - 2At^2 = TARGETVEL * t - At^2 = TARGETPOS 
+	// => A = TARGETVEL * t - TARGETPOS / t^2 = PHASE1ACCEL = (Actual acceleration) / 2
+	// TARGETVEL = 2 * PHASE1ACCEL * t + B => B = TARGETVEL - 2 * PHASE1ACCEL * t
+	// Phase 1: Accelerating growth. Phase 2: Constant growth. Phase 3: Constant shrink 
+	const float UFO_PHASE1CHECKPOINT = 60, UFO_PHASE2CHECKPOINT = 360; // Time point where phase ends (not duration. Phase 2 duration = checkpoint 2 - checkpoint 1)
+	const float UFO_PHASE2VELOCITY = 90, UFO_PHASE3VELOCITY = -20; 	// Velocity of radius expansion
+	const float UFO_TARGETPOS = 180, UFO_TARGETVEL = 45, UFO_TARGETTIME = UFO_PHASE1CHECKPOINT / FPS; // Target position, velocity at end of phase 1
+	// PHASE1ACCEL is half the actual acceleration, 2A. Not an accurate name but best describes its purpose.
+	const float UFO_PHASE1ACCEL = (UFO_TARGETTIME * UFO_TARGETVEL - UFO_TARGETPOS) / UFO_TARGETTIME / UFO_TARGETTIME;
+	const float UFO_STARTVEL = UFO_TARGETVEL - 2 * UFO_PHASE1ACCEL * UFO_TARGETTIME;
+	// Radius added by each phase, summed up for easier reading and calculation
+	const float UFO_PHASE1ADDEDRADIUS = UFO_PHASE1CHECKPOINT / FPS * UFO_STARTVEL + pow(UFO_PHASE1CHECKPOINT / FPS, 2) * UFO_PHASE1ACCEL;
+	const float UFO_PHASE2ADDEDRADIUS = (UFO_PHASE2CHECKPOINT - UFO_PHASE1CHECKPOINT) / FPS * UFO_PHASE2VELOCITY;
 
+
+	// Bullet flags
+	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
 
 	// Set color constants for easy use and passing to functions
 	const sf::Color WHITE(255, 255, 255);

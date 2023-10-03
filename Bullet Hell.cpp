@@ -1,3 +1,7 @@
+// Ruobin Chen
+// Made with sfml 2.5.1
+// Game inspired by Touhou Project
+// Total line count as of 10/2/2023 : 1667
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -52,13 +56,14 @@ int main(){
     manager.addPattern(generalBullets);
     manager.addPattern(new Bowap(5, 150, -100, 8, { 400, 400 }, 30, 6));
     manager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3));
-    manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2, 0));
+    manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2));
     manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
+    manager.addPattern(new WindGod(40, { 400, 300 }, 0.5, 8));
     manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
     cursor->rotate(90.f);
-    vector<string> menuText = { "Test", "BOWAP", "QED", "UFO", "GRT"};
+    vector<string> menuText = { "Test", "BOWAP", "QED", "UFO", "GRT", "MOF"};
     ClickableMenu danmaku(font, WHITE, menuText, 30, {850, 200}, 30, *cursor);
 
     sfClockAtHome bulletTimer;

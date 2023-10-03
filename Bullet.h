@@ -43,6 +43,11 @@ public:
 		yVelocity = sin((currentAngle + angleDegrees) * PI / 180) * currentSpeed;
 		sprite->rotate(angleDegrees);
 	}
+	// Given a target radius, rotate a bullet so that it will form a circle of that radius
+	virtual void rotateArc(float targetRadius, float speed) {
+		// Speed is passed in so it wouldn't have to be calculated manually.
+		rotateBullet(speed * 360 / (2 * PI * (targetRadius)));
+	}
 	// Adds an offset to position instead of setting it
 	virtual void adjustPosition(float x, float y) {
 		sprite->move(x, y);
@@ -112,6 +117,13 @@ public:
 	}
 	sf::Vector2f getVelocity() {
 		return sf::Vector2f(xVelocity, yVelocity);
+	}
+	float getRotation() {
+		return sprite->getRotation();
+	}
+	void skipFrames(int frameCount) {
+		for (int i = 0; i < frameCount; i++)
+			processMovement();
 	}
 	
 	// Actual bullet types will override this. 
@@ -366,7 +378,7 @@ public:
 		sprite->setOutlineThickness(SMALLBULLETOUTLINE);
 	}
 	bool checkPlayerCollision(sf::CircleShape& playerHitbox) {
-		if (!flag) // Flag indicates whether hitbox is active
+		if (flag != ACTIVESPAWNERHITBOX) // Flag indicates whether hitbox is active
 			return false;
 		CircleBullet::checkPlayerCollision(playerHitbox);
 	}
