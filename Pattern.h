@@ -72,7 +72,7 @@ public:
 	}
 
 	// Reset frame counter
-	void resetPattern() {
+	virtual void resetPattern() {
 		frameCounter = 0;
 		for (Bullet* bullet : bullets)
 			bullet->resetBullet();
@@ -126,8 +126,9 @@ public:
 	void addLaser(sf::Vector2f position, float angleDegrees = 0, float maxWidth = 0, float growthSpeed = 1, float activationDelay = 0, float activeDuration = 0, sf::Color color = DEFAULTLASERCOLOR) {
 		bullets.push_back(new Laser(position, angleDegrees, maxWidth, growthSpeed, activationDelay, activeDuration, color));
 	}
-	void addSpawner(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTSPAWNERCOLOR, int radius = STANDARDSPAWNERRADIUS) {
-		bullets.push_back(new Spawner(position, speed, angleDegrees, color, radius));
+	// Spawners are always inserted at the beginning of the array
+	void addSpawner(sf::Vector2f position, float speed = 0, float angleDegrees = 0, bool visible = false, sf::Color color = DEFAULTSPAWNERCOLOR, int radius = STANDARDSPAWNERRADIUS) {
+		bullets.insert(bullets.begin(), new Spawner(position, speed, angleDegrees, visible, color, radius));
 	}
 };
 
@@ -249,13 +250,14 @@ public:
 	void spawnBullets() {
 		if (!active)
 			return;
-		int shotAngle = rand() % 360;
-		int sourceCount = 0;
 		if (isGoodToshoot()) {
+			int shotAngle = rand() % 360;
+			int randomColor = rand() % UFO_BULLETCOLORS.size();
+			int sourceCount = 0;
 			for (sf::Vector2f pos : shotSources) {
 				int index = bullets.size(); // Save index to set flags
 				for (int i = 0; i < streamCount; i++) {
-					addTalismanBullet(pos, baseSpeed, shotAngle + i * 360 / streamCount, RED);
+					addTalismanBullet(pos, baseSpeed, shotAngle + i * 360 / streamCount, UFO_BULLETCOLORS[randomColor]);
 				}
 				bool alternateCondition = pos.x > sourcePos.x ^ pos.y > sourcePos.y;
 				if (alternate) // Alternate decides a specific shotSource's rotation
@@ -332,52 +334,89 @@ public:
 
 // Floral pattern spawns
 class WindGod : public Pattern{
-	vector<Spawner*> spawners;
-	float cycleTime; // Frames to draw a circle
-	float cycleSpeed; // Spawner speed
-	float radius1;	// Inner circle radius
-	float spawn1; // Time point where inner spawners became active
-	float circleCut = 0.1; // Percentage of circle cut from spawning pattern
-	float offsetFrame; // Frames to advance to cut circle
+	int varianceCounter; // Groups bullets into groups of 4. Used with angle variance vector
+	int spawnPoint1; // Frame point where inner spawners became active
+	int petalBulletCount = 0; // For testing. This should be divisible by 4
+	int extraBullets; // Adds to the expected bullet count so it is divisible by 4.
+	int cycleCounter;
 public:
 	WindGod(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
 		:Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
-		spawn1 = 0;
-		cycleTime = 1;
-		radius1 = 80;
-		cycleSpeed = (2 * PI * radius1) / (cycleTime * FPS);
-		offsetFrame = circleCut * cycleTime * FPS;
-		cout << offsetFrame;
-		this->baseSpeed = cycleSpeed;
+		// Stream count will be the desired number of bullets per petal divided by 4. Equal to petalBulletCount / 4.f
+		spawnPoint1 = 0;
+		varianceCounter = 0;
+		cycleCounter = 0;
 	}
 	void spawnBullets() {
+		if (!active)
+			return;
 		// There will be 15 spawners persistent as the first 15 items in the bullet vector
-		// add circle formula for spawner positions
 		if (isGoodToshoot()) {
-			deleteAllBullets();
-			spawn1 = frameCounter - offsetFrame * 2;
-			for (int i = 0; i < 5; i++)
-				addSpawner(sourcePos, baseSpeed, 360 / 5 * i + 180);
-			for (int i = 0; i < 5; i++) {
-				for (int j = 0; j < offsetFrame; j++)
+			int shotAngle;
+			if (frameCounter != 0) { // Delete existing spawners
+				for (int i = 0; i < MOF_PETALCOUNT; i++)
+					bullets.erase(bullets.begin());
+				shotAngle = rand() % 360;
+			}
+			else
+				shotAngle = 0;
+			for (int i = 0; i < MOF_PETALCOUNT; i++)
+				addSpawner(sourcePos, MOF_SPAWNERMOVESPEED, 360 / MOF_PETALCOUNT * i + 180 + shotAngle);
+			spawnPoint1 = frameCounter;
+			// Skip frames to set up starting position for spawners
+			for (int i = 0; i < MOF_PETALCOUNT; i++) {
+				for (int j = 0; j < MOF_FRAMEOFFSET; j++)
 				{
-					bullets[i]->rotateArc(80, baseSpeed);
+					bullets[i]->rotateArc(MOF_INNERRADIUS, MOF_SPAWNERMOVESPEED);
 					bullets[i]->processMovement();
 				}
+				// Once spawners are in position, apply inverse of density scalar
+				bullets[i]->setSpeed(MOF_SPAWNERMOVESPEED * MOF_DENSITYSCALEDENOMINATOR / MOF_DENSITYSCALENUMERATOR);
 			}
 		}
 	}
 	void processMovement() {
-		for (int i = 0; i < 5; i++)
-		{	
-			if (frameCounter > spawn1 + cycleTime * FPS)
-				bullets[i]->setVelocity(0, 0);
-			bullets[i]->rotateBullet(baseSpeed * 360 / (2 * PI * (80)));
-			addTalismanBullet(bullets[i]->getPosition(), 0, 90, RED);
+		if (!active)
+			return;
+		// Stop spawners
+		if (frameCounter > spawnPoint1 + MOF_ARCDRAWTIME * FPS)
+			for (int i = 0; i < MOF_PETALCOUNT; i++)
+				bullets[i]->setVelocity(0, 0); 
+		else 
+		{
+			int i = 0;
+			if (cycleCounter % MOF_DENSITYSCALEDENOMINATOR < MOF_ADVANCEMENTREMAINDER)
+				i--; // Extend loop
+			cycleCounter = cycleCounter >= MOF_DENSITYSCALEDENOMINATOR - 1 ? 0 : cycleCounter + 1;
+
+			for (; i < MOF_MINADVANCEMENTS; i++) {
+				for (int j = 0; j < MOF_PETALCOUNT; j++) {
+					// Move spawners and have spawners spawn bullets. Places the next three bullets in this frame
+					Bullet* bullet = bullets[j];
+					// 90 aims bullets to petal centers as spawners are tangential. Also add variance to group by quads.
+					addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() + 90 + 15 + MOF_BULLETANGLEVARIANCE[varianceCounter], RED);
+					bullet->rotateArc(MOF_INNERRADIUS, MOF_SPAWNERMOVESPEED / MOF_DENSITYSCALENUMERATOR * MOF_DENSITYSCALEDENOMINATOR);
+					bullet->processMovement();
+					petalBulletCount++;
+				}
+				varianceCounter = varianceCounter >= MOF_BULLETANGLEVARIANCE.size() - 1 ? 0 : varianceCounter + 1;
+			}
 		}
-		for (Bullet* bullet : bullets) {
-			bullet->processMovement();
+		// Launch the talisman bullets
+		if (frameCounter - 30 == spawnPoint1 + int(MOF_ARCDRAWTIME * FPS)) {
+			for (int i = MOF_PETALCOUNT; i < bullets.size(); i++)
+				bullets[i]->setVelocityR(baseSpeed, bullets[i]->getRotation());
+			print(petalBulletCount / MOF_PETALCOUNT);
+			petalBulletCount = 0;
 		}
+		// Update positions for non-spawners
+		for (int i = MOF_PETALCOUNT; i < bullets.size(); i++)
+			bullets[i]->processMovement();
+	}
+	void resetPattern() {
+		Pattern::resetPattern();
+		varianceCounter = 0;
+		petalBulletCount = 0;
 	}
 	
 };
@@ -407,7 +446,6 @@ public:
 			pattern->spawnBullets();
 			pattern->incrementFrame();
 			pattern->processMovement();
-
 		}
 	}
 	// Deactive all patterns and reset their counters
