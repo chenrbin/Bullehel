@@ -3,10 +3,12 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, arrowhead bullet, sprite layering, figure out variance constant, add new petals
+	// Todo: convex shapes, arrowhead bullet, sprite layering, staged release, mof acceleration, clean up mof
 	// more patterns, more bullets
 	// mercury poison, resurrection butterfly, seamless ceiling
 	// Original ideas: coding, chemistry, dna spirals
+	// Second petals have 10 quads, 40 % circle
+	// Start second and third circle at first circle after offset
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
@@ -65,7 +67,7 @@ namespace Constants {
 
 	// Pattern constants
 	// BOWAP
-	const float BOWAP_ANGLEOFFSET = -5, BOWAP_ANGLEVELOCITY = -150, BOWAP_ANGLEACCELERATION = 100;
+	const float BOWAP_ANGLEOFFSET = -5, BOWAP_ANGLEVELOCITY = -150, BOWAP_ANGLEACCELERATION = 100; // Time is in seconds
 	// QED 
 	const int QED_VARIANCEX = 400, QED_VARIANCEY = 200; // Length range where bullets can spawn
 
@@ -94,23 +96,35 @@ namespace Constants {
 	// WindGod
 	// Desired behavior
 	const int MOF_PETALCOUNT = 5;
-	const float MOF_INNERRADIUS = 80; // Radius of the inner petals
+	const float MOF_RADIUS1 = 90; // Radius of the inner petals
 	const float MOF_CIRCLEPORTIONCUT = 0.15f; // Percentage of circle cut from spawning pattern
-	const float MOF_ARCDRAWTIME = 0.8f; // Seconds to draw the cut circle
-	// Tangential speed of spawner, units per frame. Speed = Arc length / Arc draw time (add density scalar later)
-	const float MOF_SPAWNERMOVESPEED = 2 * PI * MOF_INNERRADIUS * (1 - MOF_CIRCLEPORTIONCUT) / (MOF_ARCDRAWTIME * FPS);
+	const int MOF_ARCDRAWTIME1 = 0.8 * FPS; // Frames to draw the first circle
+	
+
+	// Calculations
+	// Base speed of spawners
+	const float MOF_SPAWNERMOVESPEED = 2 * PI * MOF_RADIUS1 * (1 - MOF_CIRCLEPORTIONCUT) / MOF_ARCDRAWTIME1; 
 	// Number of frames to advance from centerPos to spawner starting position
-	const float MOF_FRAMEOFFSET = MOF_ARCDRAWTIME * (1 / (1 - MOF_CIRCLEPORTIONCUT) - 1) / 2 * FPS;
+	const float MOF_FRAMEOFFSET = MOF_ARCDRAWTIME1 * (1 / (1 - MOF_CIRCLEPORTIONCUT) - 1) / 2;
+	
+	const float MOF_RADIUS2 = 2 * sin(PI / MOF_PETALCOUNT) * MOF_RADIUS1; // Circle 2 will be cut 50%
+	const float MOF_RADIUS3 = MOF_RADIUS2 * sqrt(2); // Circle 3 will be cut 50%
+
+	const int MOF_LAYER1CHECKPOINT = MOF_ARCDRAWTIME1 + 1; // Time point where layer 1 is complete
+	const int MOF_LAYER2CHECKPOINT = MOF_LAYER1CHECKPOINT + PI * MOF_RADIUS2 / MOF_SPAWNERMOVESPEED; 
+	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / MOF_SPAWNERMOVESPEED + 2;
+
 	// Handles "frame skipping" to increase density
 	// A cycle of DENOMINATOR frames, every cycle, each frame makes MINADVANCEMENTS advancements and REMAINDER frames advance one extra time
 	// Scalar fraction should be in simplest form for smoothest transition. Common denominator is not checked.
-	const int MOF_DENSITYSCALENUMERATOR = 5, MOF_DENSITYSCALEDENOMINATOR = 4;
-	const int MOF_MINADVANCEMENTS = MOF_DENSITYSCALENUMERATOR / MOF_DENSITYSCALEDENOMINATOR;
-	const int MOF_ADVANCEMENTREMAINDER = MOF_DENSITYSCALENUMERATOR % MOF_DENSITYSCALEDENOMINATOR;
+	const int MOF_DSCALENUMER = 5, MOF_DSCALEDENOM = 4, MOF_DSCALENUMER2 = 5, MOF_DSCALEDENOM2 = 6;
+	const int MOF_EXPECTEDBULLETS1 = 60, MOF_EXPECTEDBULLETS2 = 40, MOF_EXPECTEDBULLETS3 = 40;
 
 	// Handles angle variance
-	const float MOF_VARIANCE = -2.4 / MOF_ARCDRAWTIME; // 3.5 inversely relative to draw time was tested to be the desired spread. Slightly decrease for bigger spread.
-	const vector<float> MOF_BULLETANGLEVARIANCE = { MOF_VARIANCE, 2 * MOF_VARIANCE, 3 * MOF_VARIANCE, 4 * MOF_VARIANCE };
+	const float MOF_VARIANCECONSTANT = -187; // Constant that is manually tested. Decrease for bigger spread.
+	const vector<float> MOF_BULLETANGLEVARIANCE = { MOF_VARIANCECONSTANT, 2 * MOF_VARIANCECONSTANT, 3 * MOF_VARIANCECONSTANT, 4 * MOF_VARIANCECONSTANT };
+	
+
 	// Bullet flags
 	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
 

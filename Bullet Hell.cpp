@@ -5,6 +5,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include <numeric>
 #include "Constants.h"
 #include "Drawings.h"
 #include "Mechanisms.h"
@@ -12,10 +13,8 @@
 #include "Pattern.h"
 #include "GameScreen.h"
 #include "Characters.h"
-
 using namespace std;
 using namespace Constants;
-
 // Add a list of static bullets to the general pattern
 void addTestBullets(Pattern* generalBullets) {
     generalBullets->addCircleBullet({ 350, 400 }, 0, 0);
@@ -58,7 +57,7 @@ int main(){
     manager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3)); // 80
     manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2));
     manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
-    manager.addPattern(new WindGod(40, { 400, 300 }, 0.5, 4));
+    manager.addPattern(new WindGod({ 400, 300 }, 0.25, 4));
     manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
@@ -114,6 +113,7 @@ int main(){
                     manager.deactivateAllPatterns();
                     manager[danmaku.getCursorPos()]->setActive(true); // Index 0 is generalBullets
                 }
+                break;
             default:
                 break;
             }
