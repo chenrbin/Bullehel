@@ -57,7 +57,7 @@ int main(){
     manager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3)); // 80
     manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2));
     manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
-    manager.addPattern(new WindGod({ 400, 300 }, 0.25, 4));
+    manager.addPattern(new WindGod({ 400, 300 }, 0.35, 3.5));
     manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
@@ -96,11 +96,9 @@ int main(){
                     }   
                 }
 
-                if (event.key.code == sf::Keyboard::Space) {
+                else if (event.key.code == sf::Keyboard::Space) 
                     manager.rotateAllBullets(30);
-                    break;
-                }
-                if (event.key.code == sf::Keyboard::Z) {
+                else if (event.key.code == sf::Keyboard::Z) {
                     break;
                 }
 

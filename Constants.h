@@ -3,12 +3,10 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, arrowhead bullet, sprite layering, staged release, mof acceleration, clean up mof
+	// Todo: convex shapes, arrowhead bullet, sprite layering, mof second pattern, colors, make it harder
 	// more patterns, more bullets
 	// mercury poison, resurrection butterfly, seamless ceiling
 	// Original ideas: coding, chemistry, dna spirals
-	// Second petals have 10 quads, 40 % circle
-	// Start second and third circle at first circle after offset
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
@@ -99,7 +97,8 @@ namespace Constants {
 	const float MOF_RADIUS1 = 90; // Radius of the inner petals
 	const float MOF_CIRCLEPORTIONCUT = 0.15f; // Percentage of circle cut from spawning pattern
 	const int MOF_ARCDRAWTIME1 = 0.8 * FPS; // Frames to draw the first circle
-	
+	const int MOF_LAUNCHDELAY = 120; // Number of frames after start of layer drawing to launch bullets
+	const float MOF_LAUNCHACCEL = 0.04; // Acceleration at launch
 
 	// Calculations
 	// Base speed of spawners
@@ -112,7 +111,7 @@ namespace Constants {
 
 	const int MOF_LAYER1CHECKPOINT = MOF_ARCDRAWTIME1 + 1; // Time point where layer 1 is complete
 	const int MOF_LAYER2CHECKPOINT = MOF_LAYER1CHECKPOINT + PI * MOF_RADIUS2 / MOF_SPAWNERMOVESPEED; 
-	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / MOF_SPAWNERMOVESPEED + 2;
+	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / MOF_SPAWNERMOVESPEED + 3;
 
 	// Handles "frame skipping" to increase density
 	// A cycle of DENOMINATOR frames, every cycle, each frame makes MINADVANCEMENTS advancements and REMAINDER frames advance one extra time

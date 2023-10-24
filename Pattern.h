@@ -5,7 +5,6 @@ protected:
 	sf::FloatRect screenBounds; // Determines the bounds where the bullets can exist
 	vector<Bullet*> bullets;
 	// Timing
-	float duration; // How long the pattern is active in seconds. Does not deactivate if zero
 	int frameCounter; // Used as a timer and determines where to spawn bullets and when to move them
 	bool active;
 
@@ -22,12 +21,11 @@ protected:
 				target.draw(*bullet, states);
 	}
 public:
-	Pattern(float duration = 0, int streamCount = 0, float shotFrequency = 0, float baseSpeed = 0, sf::Vector2f sourcePos = SCREENPOS) {
+	Pattern(int streamCount = 0, float shotFrequency = 0, float baseSpeed = 0, sf::Vector2f sourcePos = SCREENPOS) {
 		frameCounter = 0;
 		active = true;
 		screenBounds = SCREENBOUNDS;
 		expandBounds(0.1);
-		this->duration = duration;
 		this->streamCount = streamCount;
 		this->shotFrequency = shotFrequency;
 		this->baseSpeed = baseSpeed;
@@ -132,11 +130,98 @@ public:
 	}
 };
 
+// Class for patterns that groups bullets into "waves" to manipulate
+class wavePattern : public Pattern{
+protected:
+	// Wave counters organize the bullets and allow manipulation of individual waves
+	vector<int> waveBulletCount; // Stores the number of remaining bullets per wave
+	vector<int> waveFrameCount; // Stores the time each wave has been active
+	int currentBulletCount; // Keeps track of the bullet count in each layer for the vectors. Used for patterns with no clearly defined wave sizes
+public:
+	wavePattern(float streamCount, float shotFrequency, float baseSpeed, sf::Vector2f sourcePos) : Pattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
+		currentBulletCount = 0;
+	}
+	// Add wave based on current bullets. Optionally use an argument instead of currentBulletCount
+	void addWave() {
+		waveBulletCount.push_back(currentBulletCount);
+		waveFrameCount.push_back(0);
+		currentBulletCount = 0;
+		checkValidWaves();
+	}
+	void addWave(int bulletCount) {
+		waveBulletCount.push_back(bulletCount);
+		waveFrameCount.push_back(0);
+		checkValidWaves();
+	}
+	// Check if wave vectors are consistent with actual bullet vectors 
+	void checkValidWaves() {
+		int counter = 0;
+		for (int& count : waveBulletCount)
+			counter += count;
+		if (counter != bullets.size()) {
+			print("Wave mismatch");
+			print(bullets.size());
+			print(counter);
+		}
+	}
+	// Returns the start indices of the bullet vector for a specific wave 
+	int getStartIndex(int waveindex) {
+		int num = 0; // Number of bullets before current wave
+		for (int i = 0; i < waveindex; i++)
+			num += waveBulletCount[i];
+		return num;
+	}
+	int getEndIndex(int waveindex) { 
+		return getStartIndex(waveindex) + waveBulletCount[waveindex] - 1;
+	}
+	// Increment wave frame timers
+	void incrementWaveFrames() {
+		for (int& counter : waveFrameCount)
+			counter++;
+	}
+	void incrementCurrentBulletCount() {
+		currentBulletCount++;
+	}
+	// Assuming all bullets are counted in the wave vectors, updates vectors along with OOB checks
+	virtual void deleteOutOfBoundsBullets() {
+		// Delete out of bound bullets while keeping sync with wave counters
+		for (int i = 0; i < bullets.size(); i++)
+			if (!screenBounds.contains(bullets[i]->getPosition())) {
+				Bullet* temp = bullets[i];
+				bullets.erase(bullets.begin() + i);
+				delete temp;
+
+				// Decrement waveBulletCount at the correct index
+				int cumulativeCount = 0;
+				for (int j = 0; j < waveBulletCount.size(); j++)
+					if (i < waveBulletCount[j] + cumulativeCount) {
+						waveBulletCount[j]--;
+						if (waveBulletCount[j] <= 0) { // Erase empty waves
+							waveBulletCount.erase(waveBulletCount.begin() + j);
+							waveFrameCount.erase(waveFrameCount.begin() + j);
+						}
+						break;
+					}
+					else
+						cumulativeCount += waveBulletCount[j];
+				i--; // Reiterate current index since vector has shrunk;
+			}
+
+	}
+	// Delete all bullets and clear vectors
+	virtual void deleteAllBullets() {
+		Pattern::deleteAllBullets();
+		waveBulletCount.clear();
+		waveFrameCount.clear();
+		currentBulletCount = 0;
+	}
+};
+
 // Direct stream with accelerating angle velocity
 class Bowap : public Pattern {
 public:
-	Bowap(float BOWAP_ANGLEOFFSET, float BOWAP_ANGLEVELOCITY, float BOWAP_ANGLEACCELERATION, int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
-		: Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {}
+	Bowap(float BOWAP_ANGLEOFFSET, float BOWAP_ANGLEVELOCITY, float BOWAP_ANGLEACCELERATION, int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed)
+		: Pattern(streamCount, shotFrequency, baseSpeed, sourcePos) {}
 	void spawnBullets() {
 		if (!active)
 			return;
@@ -153,8 +238,8 @@ public:
 class QedRipples : public Pattern { // Todo: speed up phases
 	sf::FloatRect bounceBounds;
 public:
-	QedRipples(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, sf::FloatRect bounceBounds = SCREENBOUNDS, float duration = 0)
-		:Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
+	QedRipples(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, sf::FloatRect bounceBounds = SCREENBOUNDS)
+		:Pattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
 		this->bounceBounds = bounceBounds;
 	}
 	void processMovement() {
@@ -190,19 +275,16 @@ public:
 	}
 };
 // Ring of bullets that along an imaginary circle that moves down and expands
-class FlyingSaucer : public Pattern {
+class FlyingSaucer : public wavePattern {
 	bool alternate; // Alternate rotation
 	vector<sf::Vector2f> shotSources;
-	// Wave counters organize the bullets and allow manipulation of individual waves
-	vector<int> waveBulletCount; // Stores the number of remaining bullets per wave
-	vector<int> waveFrameCount; // Stores the time each wave has been active
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		for (Bullet* bullet : bullets)
 			target.draw(*bullet, states);
 	}
 public:
-	FlyingSaucer(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
-		:Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
+	FlyingSaucer(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed)
+		:wavePattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
 		alternate = false;
 		shotSources.push_back({ sourcePos.x - 180, sourcePos.y + 50 });
 		shotSources.push_back({ sourcePos.x + 180, sourcePos.y + 50 });
@@ -213,32 +295,29 @@ public:
 	void processMovement() {
 		if (!active)
 			return;
-		// Increment wave frame timers
-		for (int& counter : waveFrameCount)
-			counter++;
-
-		int index = 0; // For keeping track of each bullet in each wave
+		incrementWaveFrames();
 		// Process movement and ring expansion through rotation speed
 		for (int wave = 0; wave < waveBulletCount.size(); wave++) {
 			// Calculate circle radius based on desire behavior. See pattern constants in Constants.h
 			float targetRadius = 0;
+			int frameCount = waveFrameCount[wave];
 			// Determine speed of ring expansion
-			if (waveFrameCount[wave] < UFO_PHASE1CHECKPOINT) 
-				targetRadius = waveFrameCount[wave] / FPS * UFO_STARTVEL + pow(waveFrameCount[wave] / FPS, 2) * UFO_PHASE1ACCEL;
-			else if (waveFrameCount[wave] < UFO_PHASE2CHECKPOINT) 
-				targetRadius = (waveFrameCount[wave] - UFO_PHASE1CHECKPOINT) / FPS * UFO_PHASE2VELOCITY + UFO_PHASE1ADDEDRADIUS;
+			if (frameCount < UFO_PHASE1CHECKPOINT)
+				targetRadius = frameCount / FPS * UFO_STARTVEL + pow(frameCount / FPS, 2) * UFO_PHASE1ACCEL;
+			else if (frameCount < UFO_PHASE2CHECKPOINT)
+				targetRadius = (frameCount - UFO_PHASE1CHECKPOINT) / FPS * UFO_PHASE2VELOCITY + UFO_PHASE1ADDEDRADIUS;
 			else 
-				targetRadius = (waveFrameCount[wave] - UFO_PHASE2CHECKPOINT) / FPS * UFO_PHASE3VELOCITY + UFO_PHASE1ADDEDRADIUS + UFO_PHASE2ADDEDRADIUS;
+				targetRadius = (frameCount - UFO_PHASE2CHECKPOINT) / FPS * UFO_PHASE3VELOCITY + UFO_PHASE1ADDEDRADIUS + UFO_PHASE2ADDEDRADIUS;
 			// Rotate each wave
-			for (int j = 0; j < waveBulletCount[wave]; j++) {
-				Bullet* bullet = bullets[index];
+			for (int j = getStartIndex(wave); j <= getEndIndex(wave); j++) {
+				Bullet* bullet = bullets[j];
 				bullet->processMovement();
 				if (bullet->getFlag() == NEUTRAL)
 					bullet->rotateArc(targetRadius, baseSpeed);
 				else
 					bullet->rotateArc(targetRadius, -baseSpeed);
-				index++;
-				if (waveFrameCount[wave] < UFO_PHASE2CHECKPOINT)
+				// Move bullets down
+				if (frameCount < UFO_PHASE2CHECKPOINT)
 					bullet->adjustPosition(0, 1);
 				else // Speed up descent after phase 2
 					bullet->adjustPosition(0, 1.1);
@@ -270,48 +349,17 @@ public:
 					shotAngle = rand() % 360;
 			}
 			// Add to the wave counters
-			waveBulletCount.push_back(shotSources.size() * streamCount);
-			waveFrameCount.push_back(0);
+			addWave(shotSources.size() * streamCount);
 			alternate = !alternate;
 		}
-	}
-	virtual void deleteAllBullets() {
-		Pattern::deleteAllBullets();
-		waveBulletCount.clear();
-		waveFrameCount.clear();
-	}
-	void deleteOutOfBoundsBullets() {
-		// Delete out of bound bullets while keeping sync with wave counters
-		for (int i = 0; i < bullets.size(); i++)
-			if (!screenBounds.contains(bullets[i]->getPosition())) {
-				Bullet* temp = bullets[i];
-				bullets.erase(bullets.begin() + i);
-				delete temp;
-
-				// Decrement waveBulletCount
-				int cumulativeCount = 0;
-				for (int j = 0; j < waveBulletCount.size(); j++)
-					if (i < waveBulletCount[j] + cumulativeCount) {
-						waveBulletCount[j]--;
-						if (waveBulletCount[j] <= 0) { // Erase empty waves
-							waveBulletCount.erase(waveBulletCount.begin() + j);
-							waveFrameCount.erase(waveFrameCount.begin() + j);
-						}
-						break;
-					}
-					else
-						cumulativeCount += waveBulletCount[j];
-				i--; // Reiterate current index since vector has shrunk;
-			}
-
 	}
 };
 
 // Simple but fast bullet rings 
 class GengetsuTime : public Pattern {
 public:
-	GengetsuTime(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
-		:Pattern(duration, streamCount, shotFrequency, baseSpeed, sourcePos) {
+	GengetsuTime(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed)
+		:Pattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
 	}
 	void spawnBullets() {
 		if (!active)
@@ -332,27 +380,27 @@ public:
 };
 
 // 3-layer floral pattern spawns
-class WindGod : public Pattern{
+class WindGod : public wavePattern{
 	int varianceCounter; // Groups bullets into groups of 4. Used with angle variance vector
 	int spawnPoint1; // Frame point where inner spawners became active
-	int petalBulletCount = 0; // For testing. This should be divisible by 4
 	int cycleCounter;
 	int shotAngle; // Refreshes for every new "flower"
 	float adjustedSpawnerSpeed, currentCircleRadius; // Variables for spawner pathing.
 	int scaleNumer, scaleDenom; // Adjusts bullet density
 	float bulletDensity;
+
 public:
 	WindGod(sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
-		:Pattern(duration, 0, shotFrequency, baseSpeed, sourcePos) { 
+		:wavePattern(0, shotFrequency, baseSpeed, sourcePos) { 
 		// StreamCount is unused because petal count is constant. Shot frequency determines frequency of spawner refresh. 
-		spawnPoint1 = 0, varianceCounter = 0, cycleCounter = 0, shotAngle = 0;
+		spawnPoint1 = 0, varianceCounter = 0, cycleCounter = 0, shotAngle = 0, currentBulletCount = 0;
 		currentCircleRadius = 0; bulletDensity = 0, scaleDenom = 0, scaleNumer = 0, adjustedSpawnerSpeed = 0;
 		expandBounds(0.1); // Spawner may slightly clip the top, so expand bounds
 	}
 	void spawnBullets() {
 		if (!active)
 			return;
-		// There will be 15 spawners persistent as the first 15 items in the bullet vector
+		// There will be five spawners persistent as the first five items in the bullet vector
 		if (isGoodToshoot()) { // Reset to layer 1
 			spawnPoint1 = frameCounter;
 			adjustSpawners();
@@ -363,12 +411,14 @@ public:
 					bullets.erase(bullets.begin());
 				shotAngle = rand() % 360;
 			}
-			else
+			else {
 				shotAngle = 0; // Preset angle for first shot
-
+			}
 			// Create new spawners
 			for (int i = 0; i < MOF_PETALCOUNT; i++)
 				addSpawner(sourcePos, MOF_SPAWNERMOVESPEED, 360 / MOF_PETALCOUNT * i + 180 + shotAngle);
+			if (frameCounter == 0) // Accounting for spawners in the waves. They won't be deleted by OOB checks but will instantly be replaced, so there is no need to update these.
+				addWave(5); // Spawners will always be wave 0;
 
 			// Skip frames to set up starting position for spawners
 			for (int i = 0; i < MOF_PETALCOUNT; i++) {
@@ -385,8 +435,11 @@ public:
 	void processMovement() {
 		if (!active)
 			return;
+		incrementWaveFrames();
+
 		if (frameCounter == spawnPoint1 + MOF_LAYER1CHECKPOINT) // Move spawners to layer 2
 		{
+			addWave();
 			adjustSpawners();
 			// Adjust spawner velocity and position
 			for (int i = 0; i < MOF_PETALCOUNT; i++) {
@@ -398,6 +451,7 @@ public:
 		}
 		else if (frameCounter == spawnPoint1 + MOF_LAYER2CHECKPOINT) // Move spawners to layer 3
 		{
+			addWave();
 			adjustSpawners();
 			// Adjust spawner velocity and position
 			for (int i = 0; i < MOF_PETALCOUNT; i++) {
@@ -409,10 +463,12 @@ public:
 			}
 		}
 		// Stop spawners
-		else if (frameCounter > spawnPoint1 + MOF_LAYER3CHECKPOINT)
-			for (int i = 0; i < MOF_PETALCOUNT; i++) 
+		else if (frameCounter == spawnPoint1 + MOF_LAYER3CHECKPOINT) {
+			addWave();
+			for (int i = 0; i < MOF_PETALCOUNT; i++)
 				bullets[i]->setVelocity(0, 0);
-		else // Spawn bullets
+		}
+		else if (frameCounter < spawnPoint1 + MOF_LAYER3CHECKPOINT) // Spawn bullets
 		{
 			int i = 0;
 			// Adjusts bullet density by manipulating the number of iterations per frame
@@ -426,17 +482,19 @@ public:
 					addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() + 90 + 15 + MOF_BULLETANGLEVARIANCE[varianceCounter] / bulletDensity, RED);
 					bullet->rotateArc(currentCircleRadius, adjustedSpawnerSpeed);
 					bullet->processMovement();
-					petalBulletCount++;
+					incrementCurrentBulletCount();
 				}
 				varianceCounter = varianceCounter >= MOF_BULLETANGLEVARIANCE.size() - 1 ? 0 : varianceCounter + 1;
 			}
 		}
 		// Launch the talisman bullets
-		if (frameCounter == spawnPoint1 + MOF_LAYER3CHECKPOINT + 30) {
-			for (int i = MOF_PETALCOUNT; i < bullets.size(); i++)
-				bullets[i]->setVelocityR(baseSpeed, bullets[i]->getRotation());
-			print(petalBulletCount / MOF_PETALCOUNT);
-			petalBulletCount = 0;
+		for (int i = 1; i < waveBulletCount.size(); i++)
+		{
+			if (waveFrameCount[i] >= MOF_LAUNCHDELAY && waveFrameCount[i] <= MOF_LAUNCHDELAY + baseSpeed / MOF_LAUNCHACCEL)
+			{
+				for (int j = getStartIndex(i); j <= getEndIndex(i); j++)
+					bullets[j]->adjustVelocityR(MOF_LAUNCHACCEL);
+			}
 		}
 		// Update positions for non-spawners
 		for (int i = MOF_PETALCOUNT; i < bullets.size(); i++)
@@ -446,7 +504,6 @@ public:
 		Pattern::resetPattern();
 		varianceCounter = 0;
 		cycleCounter = 0;
-		petalBulletCount = 0;
 	}
 	// Grouping code for setting variables based on current layer
 	void adjustSpawners() {

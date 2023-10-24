@@ -66,11 +66,6 @@ public:
 	virtual void adjustPosition(float x, float y) {
 		sprite->move(x, y);
 	}
-	// Adds an offset to velocity
-	virtual void adjustVelocity(float x, float y) {
-		xVelocity += x;
-		yVelocity += y;
-	}
 	virtual void setPosition(float x, float y) {
 		sprite->setPosition(x, y);
 	}
@@ -90,15 +85,26 @@ public:
 		xVelocity = speed * cos(sprite->getRotation() * PI / 180);
 		yVelocity = speed * sin(sprite->getRotation() * PI / 180);
 	}
-	// Only sets the rotation of the sprite and nothing else
-	virtual void setRotation(float angleDegrees) {
-		sprite->setRotation(angleDegrees);
+	// Adds an offset to velocity
+	virtual void adjustVelocity(float x, float y) {
+		xVelocity += x;
+		yVelocity += y;
+	}
+	// Adds an offset to velocity and maintains rotation
+	virtual void adjustVelocityR(float speed) {
+		xVelocity += speed * cos(sprite->getRotation() * PI / 180);
+		yVelocity += speed * sin(sprite->getRotation() * PI / 180);
 	}
 	// Adds a multiplier to the velocity. Will update bullet orientation
 	void scaleVelocity(float x, float y) {
 		xVelocity *= x;
 		yVelocity *= y;
 		alignAngle();
+	}
+
+	// Only sets the rotation of the sprite and nothing else
+	virtual void setRotation(float angleDegrees) {
+		sprite->setRotation(angleDegrees);
 	}
 	
 	// Set flags used for certain patterns
