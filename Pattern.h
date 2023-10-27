@@ -257,7 +257,7 @@ public:
 				bullet->setFlag(BOUNCED);
 			}
 		}
-	}
+			}
 	void spawnBullets() {
 		if (!active)
 			return;
@@ -302,12 +302,15 @@ public:
 			float targetRadius = 0;
 			int frameCount = waveFrameCount[wave];
 			// Determine speed of ring expansion
-			if (frameCount < UFO_PHASE1CHECKPOINT)
+			if (frameCount < UFO_PHASE1CHECKPOINT) {
 				targetRadius = frameCount / FPS * UFO_STARTVEL + pow(frameCount / FPS, 2) * UFO_PHASE1ACCEL;
-			else if (frameCount < UFO_PHASE2CHECKPOINT)
+			}
+			else if (frameCount < UFO_PHASE2CHECKPOINT) {
 				targetRadius = (frameCount - UFO_PHASE1CHECKPOINT) / FPS * UFO_PHASE2VELOCITY + UFO_PHASE1ADDEDRADIUS;
-			else 
+			}
+			else {
 				targetRadius = (frameCount - UFO_PHASE2CHECKPOINT) / FPS * UFO_PHASE3VELOCITY + UFO_PHASE1ADDEDRADIUS + UFO_PHASE2ADDEDRADIUS;
+			}
 			// Rotate each wave
 			for (int j = getStartIndex(wave); j <= getEndIndex(wave); j++) {
 				Bullet* bullet = bullets[j];
@@ -343,7 +346,6 @@ public:
 				if (alternateCondition) // Index goes from size before adding batch to after adding. Effectively accesses the new batch
 					for (; index < bullets.size(); index++) 
 						bullets[index]->setFlag(REVERSEROTATION);
-
 				sourceCount++;
 				if (sourceCount == shotSources.size() / 2) // Reroll rng
 					shotAngle = rand() % 360;
@@ -388,6 +390,9 @@ class WindGod : public wavePattern{
 	float adjustedSpawnerSpeed, currentCircleRadius; // Variables for spawner pathing.
 	int scaleNumer, scaleDenom; // Adjusts bullet density
 	float bulletDensity;
+	int currentColorIndex; // Index 
+	bool alternate; // Alternate Pattern
+
 
 public:
 	WindGod(sf::Vector2f sourcePos, float shotFrequency, float baseSpeed, float duration = 0)
@@ -396,6 +401,7 @@ public:
 		spawnPoint1 = 0, varianceCounter = 0, cycleCounter = 0, shotAngle = 0, currentBulletCount = 0;
 		currentCircleRadius = 0; bulletDensity = 0, scaleDenom = 0, scaleNumer = 0, adjustedSpawnerSpeed = 0;
 		expandBounds(0.1); // Spawner may slightly clip the top, so expand bounds
+		currentColorIndex = 0;
 	}
 	void spawnBullets() {
 		if (!active)
@@ -440,6 +446,8 @@ public:
 		if (frameCounter == spawnPoint1 + MOF_LAYER1CHECKPOINT) // Move spawners to layer 2
 		{
 			addWave();
+			if (++currentColorIndex >= MOF_BULLETCOLORS.size())
+				currentColorIndex = 0;
 			adjustSpawners();
 			// Adjust spawner velocity and position
 			for (int i = 0; i < MOF_PETALCOUNT; i++) {
@@ -452,6 +460,8 @@ public:
 		else if (frameCounter == spawnPoint1 + MOF_LAYER2CHECKPOINT) // Move spawners to layer 3
 		{
 			addWave();
+			if (++currentColorIndex >= MOF_BULLETCOLORS.size())
+				currentColorIndex = 0;
 			adjustSpawners();
 			// Adjust spawner velocity and position
 			for (int i = 0; i < MOF_PETALCOUNT; i++) {
@@ -465,9 +475,12 @@ public:
 		// Stop spawners
 		else if (frameCounter == spawnPoint1 + MOF_LAYER3CHECKPOINT) {
 			addWave();
+			if (++currentColorIndex >= MOF_BULLETCOLORS.size())
+				currentColorIndex = 0;
 			for (int i = 0; i < MOF_PETALCOUNT; i++)
 				bullets[i]->setVelocity(0, 0);
 		}
+
 		else if (frameCounter < spawnPoint1 + MOF_LAYER3CHECKPOINT) // Spawn bullets
 		{
 			int i = 0;
@@ -479,7 +492,7 @@ public:
 				for (int j = 0; j < MOF_PETALCOUNT; j++) {
 					Bullet* bullet = bullets[j];
 					// 90 aims bullets to petal centers as spawners are tangential. Also add variance to group by quads.
-					addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() + 90 + 15 + MOF_BULLETANGLEVARIANCE[varianceCounter] / bulletDensity, RED);
+					addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() + 90 + 15 + MOF_BULLETANGLEVARIANCE[varianceCounter] / bulletDensity, MOF_BULLETCOLORS[currentColorIndex]);
 					bullet->rotateArc(currentCircleRadius, adjustedSpawnerSpeed);
 					bullet->processMovement();
 					incrementCurrentBulletCount();
@@ -522,9 +535,9 @@ public:
 		else { // Layer 3
 			bulletDensity = MOF_EXPECTEDBULLETS3 * 2;
 			currentCircleRadius = MOF_RADIUS3;
-			scaleNumer = MOF_DSCALENUMER2;
-			scaleDenom = MOF_DSCALEDENOM2;
-			adjustedSpawnerSpeed = MOF_SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.25;
+			scaleNumer = MOF_DSCALENUMER3;
+			scaleDenom = MOF_DSCALEDENOM3;
+			adjustedSpawnerSpeed = MOF_EXTRASPEEDMULTIPLIER * MOF_SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.25;
 		}
 	}
 	

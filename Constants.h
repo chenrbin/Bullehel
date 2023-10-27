@@ -3,8 +3,7 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, arrowhead bullet, sprite layering, mof second pattern, colors, make it harder
-	// more patterns, more bullets
+	// Todo: convex shapes, arrowhead bullet, mof second patterns
 	// mercury poison, resurrection butterfly, seamless ceiling
 	// Original ideas: coding, chemistry, dna spirals
 	// Size and dimensions
@@ -42,10 +41,10 @@ namespace Constants {
 	const sf::Color GRAY(128, 128, 128);
 	const sf::Color RED(255, 0, 0);
 	const sf::Color ORANGE(255, 165, 0);
-	const sf::Color YELLOW(255, 255, 0);
+	const sf::Color YELLOW(220, 220, 0);
 	const sf::Color GREEN(0, 255, 0);
 	const sf::Color BLUE(0, 0, 255);
-	const sf::Color CYAN(0, 255, 255);
+	const sf::Color CYAN(0, 200, 200);
 	const sf::Color VIOLET(148, 0, 211);
 	const sf::Color TRANSPARENT(0, 0, 0, 0);
 	const sf::Color SEETHROUGH(255, 255, 255, 100);
@@ -81,7 +80,7 @@ namespace Constants {
 	// TARGETVEL = 2 * PHASE1ACCEL * t + B => B = TARGETVEL - 2 * PHASE1ACCEL * t
 	// Phase 1: Accelerating growth. Phase 2: Constant growth. Phase 3: Constant shrink 
 	const float UFO_PHASE1CHECKPOINT = 60, UFO_PHASE2CHECKPOINT = 360; // Time point where phase ends (not duration. Phase 2 duration = checkpoint 2 - checkpoint 1)
-	const float UFO_PHASE2VELOCITY = 90, UFO_PHASE3VELOCITY = -20; 	// Velocity of radius expansion
+	const float UFO_PHASE2VELOCITY = 90, UFO_PHASE3VELOCITY = -20; 	// Velocity of radius expansion, units per second
 	const float UFO_TARGETPOS = 180, UFO_TARGETVEL = 45, UFO_TARGETTIME = UFO_PHASE1CHECKPOINT / FPS; // Target position, velocity at end of phase 1
 	// PHASE1ACCEL is half the actual acceleration, 2A. Not an accurate name but best describes its purpose.
 	const float UFO_PHASE1ACCEL = (UFO_TARGETTIME * UFO_TARGETVEL - UFO_TARGETPOS) / UFO_TARGETTIME / UFO_TARGETTIME;
@@ -95,10 +94,12 @@ namespace Constants {
 	// Desired behavior
 	const int MOF_PETALCOUNT = 5;
 	const float MOF_RADIUS1 = 90; // Radius of the inner petals
-	const float MOF_CIRCLEPORTIONCUT = 0.15f; // Percentage of circle cut from spawning pattern
+	const float MOF_CIRCLEPORTIONCUT = 0.15f; // Percentage of first circle cut from spawning pattern
 	const int MOF_ARCDRAWTIME1 = 0.8 * FPS; // Frames to draw the first circle
-	const int MOF_LAUNCHDELAY = 120; // Number of frames after start of layer drawing to launch bullets
-	const float MOF_LAUNCHACCEL = 0.04; // Acceleration at launch
+	const int MOF_LAUNCHDELAY = 90; // Number of frames after start of layer drawing to launch bullets
+	const float MOF_LAUNCHACCEL = 0.03; // Acceleration at launch
+	const vector<sf::Color> MOF_BULLETCOLORS = { RED, VIOLET, BLUE, GREEN, GREEN, CYAN };
+	const float MOF_EXTRASPEEDMULTIPLIER = 1.6; // Used for layer 3
 
 	// Calculations
 	// Base speed of spawners
@@ -111,12 +112,12 @@ namespace Constants {
 
 	const int MOF_LAYER1CHECKPOINT = MOF_ARCDRAWTIME1 + 1; // Time point where layer 1 is complete
 	const int MOF_LAYER2CHECKPOINT = MOF_LAYER1CHECKPOINT + PI * MOF_RADIUS2 / MOF_SPAWNERMOVESPEED; 
-	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / MOF_SPAWNERMOVESPEED + 3;
+	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / (MOF_EXTRASPEEDMULTIPLIER * MOF_SPAWNERMOVESPEED) + 2;
 
 	// Handles "frame skipping" to increase density
 	// A cycle of DENOMINATOR frames, every cycle, each frame makes MINADVANCEMENTS advancements and REMAINDER frames advance one extra time
 	// Scalar fraction should be in simplest form for smoothest transition. Common denominator is not checked.
-	const int MOF_DSCALENUMER = 5, MOF_DSCALEDENOM = 4, MOF_DSCALENUMER2 = 5, MOF_DSCALEDENOM2 = 6;
+	const int MOF_DSCALENUMER = 5, MOF_DSCALEDENOM = 4, MOF_DSCALENUMER2 = 5, MOF_DSCALEDENOM2 = 6, MOF_DSCALENUMER3 = 4, MOF_DSCALEDENOM3 = 3;
 	const int MOF_EXPECTEDBULLETS1 = 60, MOF_EXPECTEDBULLETS2 = 40, MOF_EXPECTEDBULLETS3 = 40;
 
 	// Handles angle variance

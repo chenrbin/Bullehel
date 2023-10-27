@@ -29,28 +29,32 @@ public:
 	virtual void processMovement() {
 		sprite->move(xVelocity, yVelocity);
 	}
-	// Rotate bullet direction
-	virtual void rotateBullet(float angleDegrees) {
+	// Rotate bullet direction. Optionally provide speed so it does not have to be calculated
+	virtual void rotateBullet(float angleDegrees, float speed = 0) {
 		// Edge cases, if variables are 0
 		if (yVelocity == 0 && xVelocity == 0) {
 			sprite->rotate(angleDegrees);
 			return;
 		}
 		if (angleDegrees == 0) return;
-		float currentSpeed = sqrt(pow(xVelocity, 2) + pow(yVelocity, 2));
-		float currentAngle = atan(yVelocity / xVelocity) * 180 / PI; 
-		if (xVelocity < 0)
-			currentAngle += 180;
+		float currentSpeed = (speed != 0) ? speed : sqrt(pow(xVelocity, 2) + pow(yVelocity, 2));
+		float currentAngle = sprite->getRotation();
 		xVelocity = cos((currentAngle + angleDegrees) * PI / 180) * currentSpeed;
 		yVelocity = sin((currentAngle + angleDegrees) * PI / 180) * currentSpeed;
 		sprite->rotate(angleDegrees);
 	}
-	// Given a target radius, rotate a bullet so that it will form a circle of that radius
+	// Given a target radius and speed, rotate a bullet so that it will form a circle of that radius.
+	// Positive speed for clockwise rotation, negative for counterclockwise
 	virtual void rotateArc(float targetRadius, float speed) {
 		// No need to execute if any arguments are 0
 		if (speed == 0 || targetRadius == 0) return;
 		// Speed is passed in so it wouldn't have to be calculated manually.
-		rotateBullet(speed * 360 / (2 * PI * (targetRadius)));
+		rotateBullet(speed * 360 / (2 * PI * targetRadius));
+	}
+	// Adjust position of a bullet rotating in an arc such that its origin point remains the same
+	virtual void alignArc(float deltaRadius) {
+		float angleDelta = (sprite->getRotation() - 90) / 180 * PI;
+		adjustPosition(deltaRadius * cos(angleDelta), deltaRadius * sin(angleDelta));
 	}
 	// Given a rectangular coordinate, aim bullet towards it
 	virtual void aimBullet(sf::Vector2f targetPos) {
@@ -69,10 +73,11 @@ public:
 	virtual void setPosition(float x, float y) {
 		sprite->setPosition(x, y);
 	}
-	// Sets velocity but does not update bullet orientation. Polar version will be used more often
+	// Sets velocity. Polar version will be used more often
 	virtual void setVelocity(float x, float y) {
 		xVelocity = x;
 		yVelocity = y;
+		alignAngle();
 	}
 	// Set velocity with polar coordinates
 	virtual void setVelocityR(float speed, float angleDegrees) {
@@ -80,15 +85,17 @@ public:
 		yVelocity = speed * sin(angleDegrees * PI / 180);
 		sprite->setRotation(angleDegrees);
 	}
-	// setVelocityR but keeps current rotation
+	// Set velocity with rectangular coordinates
 	virtual void setSpeed(float speed) {
 		xVelocity = speed * cos(sprite->getRotation() * PI / 180);
 		yVelocity = speed * sin(sprite->getRotation() * PI / 180);
+		alignAngle();
 	}
 	// Adds an offset to velocity
 	virtual void adjustVelocity(float x, float y) {
 		xVelocity += x;
 		yVelocity += y;
+		alignAngle();
 	}
 	// Adds an offset to velocity and maintains rotation
 	virtual void adjustVelocityR(float speed) {
@@ -132,16 +139,7 @@ public:
 		rotateBullet(-sprite->getRotation() * 2);
 	}
 	// Sync sprite orientation with actual velocity. Optionally add an offset.
-	void alignAngle() {
-		if (yVelocity == 0 && xVelocity == 0)
-			return;
-		float angle;
-		angle = atan(yVelocity / xVelocity) * 180 / PI; // C++ handles atan(y/0), but not atan(0/0)
-		if (xVelocity < 0)
-			angle += 180;
-		sprite->setRotation(angle);
-	}
-	void alignAngle(float xOffset, float yOffset) {
+	void alignAngle(float xOffset = 0, float yOffset = 0) {
 		if (yVelocity + yOffset == 0 && xVelocity + xOffset == 0)
 			return;
 		float angle;
