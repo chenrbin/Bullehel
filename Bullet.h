@@ -29,15 +29,17 @@ public:
 	virtual void processMovement() {
 		sprite->move(xVelocity, yVelocity);
 	}
+#pragma region Rotational transformation
 	// Rotate bullet direction. Optionally provide speed so it does not have to be calculated
 	virtual void rotateBullet(float angleDegrees, float speed = 0) {
+		if (angleDegrees == 0) return;
 		// Edge cases, if variables are 0
 		if (yVelocity == 0 && xVelocity == 0) {
 			sprite->rotate(angleDegrees);
 			return;
 		}
-		if (angleDegrees == 0) return;
 		float currentSpeed = (speed != 0) ? speed : sqrt(pow(xVelocity, 2) + pow(yVelocity, 2));
+
 		float currentAngle = sprite->getRotation();
 		xVelocity = cos((currentAngle + angleDegrees) * PI / 180) * currentSpeed;
 		yVelocity = sin((currentAngle + angleDegrees) * PI / 180) * currentSpeed;
@@ -48,87 +50,19 @@ public:
 	virtual void rotateArc(float targetRadius, float speed) {
 		// No need to execute if any arguments are 0
 		if (speed == 0 || targetRadius == 0) return;
-		// Speed is passed in so it wouldn't have to be calculated manually.
-		rotateBullet(speed * 360 / (2 * PI * targetRadius));
+		// Speed is passed in so it wouldn't have to be calculated manually
+		rotateBullet(speed * 360 / (2 * PI * targetRadius), speed);
 	}
-	// Adjust position of a bullet rotating in an arc such that its origin point remains the same
-	virtual void alignArc(float deltaRadius) {
-		float angleDelta = (sprite->getRotation() - 90) / 180 * PI;
-		adjustPosition(deltaRadius * cos(angleDelta), deltaRadius * sin(angleDelta));
+	// Sets the rotation and velocity to a specified angle
+	virtual void setRotation(float angleDegrees, float speed = 0) {
+		sprite->setRotation(angleDegrees);
+		float currentSpeed = (speed != 0) ? speed : sqrt(pow(xVelocity, 2) + pow(yVelocity, 2));
+		xVelocity = cos((angleDegrees) * PI / 180) * currentSpeed;
+		yVelocity = sin((angleDegrees) * PI / 180) * currentSpeed;
 	}
 	// Given a rectangular coordinate, aim bullet towards it
 	virtual void aimBullet(sf::Vector2f targetPos) {
-		sf::Vector2f bulletPos = sprite->getPosition();
-		if (bulletPos == targetPos) // Point is directly on bullet. No rotation.
-			return;
-		float angleToPoint = atan((targetPos.y - bulletPos.y) / (targetPos.x - bulletPos.x)) * 180 / PI;
-		if (targetPos.x < bulletPos.x)
-			angleToPoint += 180;
-		rotateBullet(angleToPoint - sprite->getRotation());
-	}
-	// Adds an offset to position instead of setting it
-	virtual void adjustPosition(float x, float y) {
-		sprite->move(x, y);
-	}
-	virtual void setPosition(float x, float y) {
-		sprite->setPosition(x, y);
-	}
-	// Sets velocity. Polar version will be used more often
-	virtual void setVelocity(float x, float y) {
-		xVelocity = x;
-		yVelocity = y;
-		alignAngle();
-	}
-	// Set velocity with polar coordinates
-	virtual void setVelocityR(float speed, float angleDegrees) {
-		xVelocity = speed * cos(angleDegrees * PI / 180);
-		yVelocity = speed * sin(angleDegrees * PI / 180);
-		sprite->setRotation(angleDegrees);
-	}
-	// Set velocity with rectangular coordinates
-	virtual void setSpeed(float speed) {
-		xVelocity = speed * cos(sprite->getRotation() * PI / 180);
-		yVelocity = speed * sin(sprite->getRotation() * PI / 180);
-		alignAngle();
-	}
-	// Adds an offset to velocity
-	virtual void adjustVelocity(float x, float y) {
-		xVelocity += x;
-		yVelocity += y;
-		alignAngle();
-	}
-	// Adds an offset to velocity and maintains rotation
-	virtual void adjustVelocityR(float speed) {
-		xVelocity += speed * cos(sprite->getRotation() * PI / 180);
-		yVelocity += speed * sin(sprite->getRotation() * PI / 180);
-	}
-	// Adds a multiplier to the velocity. Will update bullet orientation
-	void scaleVelocity(float x, float y) {
-		xVelocity *= x;
-		yVelocity *= y;
-		alignAngle();
-	}
-
-	// Only sets the rotation of the sprite and nothing else
-	virtual void setRotation(float angleDegrees) {
-		sprite->setRotation(angleDegrees);
-	}
-	
-	// Set flags used for certain patterns
-	void setFlag(char val) {
-		flag = val;
-	}
-	char getFlag() {
-		return flag;
-	}
-	sf::Vector2f getPosition() {
-		return sprite->getPosition();
-	}
-	sf::Vector2f getVelocity() {
-		return sf::Vector2f(xVelocity, yVelocity);
-	}
-	float getRotation() {
-		return sprite->getRotation();
+		setRotation(getAngleToPos(sprite->getPosition(), targetPos));
 	}
 	// Flip the x velocity (reflection along the y axis)
 	virtual void flipX() {
@@ -143,11 +77,82 @@ public:
 		if (yVelocity + yOffset == 0 && xVelocity + xOffset == 0)
 			return;
 		float angle;
-		angle = atan((yVelocity + yOffset) / (xVelocity + xOffset)) * 180 / PI; // C++ handles atan(y/0), but not atan(0/0)
-		if (xVelocity + xOffset < 0)
-			angle += 180;
+		angle = atan2f((yVelocity + yOffset), (xVelocity + xOffset)) * 180 / PI; 
 		sprite->setRotation(angle);
 	}
+#pragma endregion
+
+	
+#pragma region Position and Velocity Transformations
+	// Adds an offset to position instead of setting it
+	virtual void adjustPosition(float x, float y) {
+		sprite->move(x, y);
+	}
+	virtual void setPosition(float x, float y) {
+		sprite->setPosition(x, y);
+	}
+	// Adjust position of a bullet rotating in an arc such that its origin point remains the same
+	virtual void alignArc(float deltaRadius) {
+		float angleDelta = (sprite->getRotation() - 90) / 180 * PI;
+		adjustPosition(deltaRadius * cos(angleDelta), deltaRadius * sin(angleDelta));
+	}
+	// Sets velocity. Polar version will be used more often
+	virtual void setVelocity(float x, float y) {
+		xVelocity = x;
+		yVelocity = y;
+		alignAngle();
+	}
+	// Set velocity with polar coordinates
+	virtual void setVelocityR(float speed, float angleDegrees) {
+		xVelocity = speed * cos(angleDegrees * PI / 180);
+		yVelocity = speed * sin(angleDegrees * PI / 180);
+		sprite->setRotation(angleDegrees);
+	}
+	// Adds an offset to velocity
+	virtual void adjustVelocity(float x, float y) {
+		xVelocity += x;
+		yVelocity += y;
+		alignAngle();
+	}
+	// Adds a multiplier to the velocity
+	void scaleVelocity(float x, float y) {
+		xVelocity *= x;
+		yVelocity *= y;
+		alignAngle();
+	}
+	// Set velocity facing current angle
+	virtual void setSpeed(float speed) {
+		xVelocity = speed * cos(sprite->getRotation() * PI / 180);
+		yVelocity = speed * sin(sprite->getRotation() * PI / 180);
+	}
+	// Adds an offset to velocity and maintains rotation
+	virtual void adjustSpeed(float speed) {
+		xVelocity += speed * cos(sprite->getRotation() * PI / 180);
+		yVelocity += speed * sin(sprite->getRotation() * PI / 180);
+	}
+#pragma endregion
+
+	// Set flags used for certain patterns
+	void setFlag(char val) {
+		flag = val;
+	}
+	// Get the angle from source facing target in degrees.
+	float getAngleToPos(sf::Vector2f sourcePos, sf::Vector2f targetPos) {
+		return atan2(targetPos.y - sourcePos.y, targetPos.x - sourcePos.x) * 180 / PI;
+	}
+	char getFlag() {
+		return flag;
+	}
+	sf::Vector2f getPosition() {
+		return sprite->getPosition();
+	}
+	sf::Vector2f getVelocity() {
+		return sf::Vector2f(xVelocity, yVelocity);
+	}
+	float getRotation() {
+		return sprite->getRotation();
+	}
+	
 	void skipFrames(int frameCount) {
 		for (int i = 0; i < frameCount; i++)
 			processMovement();
@@ -157,12 +162,14 @@ public:
 	virtual bool checkPlayerCollision(sf::CircleShape& hitbox) = 0;
 };
 #pragma region Bullet types
+
 // Basic bullet with circular hitbox (sprite does not have to be circular). Can be a bullet type by itself.
 class CircleBullet : virtual public Bullet {
 protected:
 	int hitBoxRadius; // Used for collision detection;
 public:
-	CircleBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0) : Bullet(speed, angleDegrees) {
+	CircleBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0) 
+		: Bullet(speed, angleDegrees) {
 		sprite = new SfCircleAtHome(WHITE, radius, position, true, color, STANDARDCIRCLEOUTLINE);
 		hitBoxRadius = radius;
 		sprite->setRotation(angleDegrees);
@@ -173,7 +180,6 @@ public:
 		sf::Vector2f bulletPos = sprite->getPosition();
 		return sqrt(pow(hitBoxPos.x - bulletPos.x, 2) + pow(hitBoxPos.y - bulletPos.y, 2)) <= playerHitbox.getRadius() + hitBoxRadius;
 	}
-
 };
 
 // Bullets that require multiple shapes to draw
@@ -267,8 +273,8 @@ public:
 		currentWidth = 1;
 		rect = new SfRectangleAtHome(WHITE, { WINDOWWIDTH, currentWidth }, centerPos, false, color, 1);
 		sprite = rect;
-		rotateBullet(angleDegrees);
 		cir = new SfCircleAtHome(WHITE, 2, centerPos, true, color, SMALLBULLETOUTLINE);
+		rotateBullet(angleDegrees);
 		extraSprites.push_back(cir);
 	}
 	void rotateBullet(float angleDegrees) {
@@ -328,8 +334,9 @@ public:
 	}
 	// Make sure the rectangle laser is aligned with the circle
 	void alignSprite() {
-		rect->alignX();
-		rect->setPosition(centerPos.x - sin(rect->getRotation() * PI / 180) * rect->getOutlineThickness(), centerPos.y + cos(rect->getRotation() * PI / 180) * rect->getOutlineThickness());
+		rect->alignY();
+		rect->setPosition(centerPos);
+		cir->alignCenter();
 	}
 	// Adds an offset to position instead of setting it
 	virtual void adjustPosition(float x, float y) {
@@ -356,9 +363,7 @@ public:
 		float angle = rect->getRotation() * PI / 180;
 		sf::Vector2f dist = { hitboxPos.x - centerPos.x, hitboxPos.y - centerPos.y };
 		float mag = sqrt(pow(dist.x, 2) + pow(dist.y, 2));
-		float angle2 = atan(dist.y / dist.x);
-		if (dist.x < 0)
-			angle2 += PI;
+		float angle2 = atan2f(dist.y, dist.x);
 		float newX = centerPos.x + (mag) * cos(angle2 - angle);
 		float newY = centerPos.y + (mag) * sin(angle2 - angle);
 		newRec.alignX();
@@ -374,16 +379,16 @@ public:
 class RiceBullet : public CircleBullet {
 public:
 	RiceBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
-		: CircleBullet(position, xVelocity, yVelocity, color, radius), Bullet(speed, angleDegrees) {
+		: CircleBullet(position, speed, angleDegrees, color, radius), Bullet(speed, angleDegrees) {
 		sprite->setOutlineThickness(SMALLBULLETOUTLINE);
-		sprite->scale(2, 1);
+		sprite->scale(2, 1); // Stretch horizonally to look like an ellipse
 		sprite->setRotation(angleDegrees);
 	}
 };
 class DotBullet : public CircleBullet {
 public:
 	DotBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
-		: CircleBullet(position, xVelocity, yVelocity, color, radius), Bullet(speed, angleDegrees) {
+		: CircleBullet(position, speed, angleDegrees, color, radius), Bullet(speed, angleDegrees) {
 		sprite->setOutlineThickness(SMALLBULLETOUTLINE);
 		sprite->setRotation(angleDegrees);
 	}
@@ -391,7 +396,7 @@ public:
 class TalismanBullet : public CircleBullet {
 public:
 	TalismanBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
-		: CircleBullet(position, xVelocity, yVelocity, color, radius), Bullet(speed, angleDegrees) {
+		: CircleBullet(position, speed, angleDegrees, color, radius), Bullet(speed, angleDegrees) {
 		delete sprite;
 		sprite = new SfRectangleAtHome(TRANSPARENTWHITE, { 4.f * radius, 3.f * radius }, position, true, color, STANDARDCIRCLEOUTLINE);
 		sprite->setRotation(angleDegrees);
@@ -400,7 +405,7 @@ public:
 class BubbleBullet : public ComplexBullet, public CircleBullet {
 public:
 	BubbleBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
-		: CircleBullet(position, xVelocity, yVelocity, color, radius), Bullet(speed, angleDegrees) {
+		: CircleBullet(position, speed, angleDegrees, color, radius), Bullet(speed, angleDegrees) {
 		// Four concentric circles with colors: transparent, color darkened and partially transparent, original color, white
 		sprite->setFillColor(TRANSPARENT);
 		sprite->setOutlineThickness(radius * 0.6);

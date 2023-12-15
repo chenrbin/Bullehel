@@ -506,7 +506,7 @@ public:
 			if (waveFrameCount[i] >= MOF_LAUNCHDELAY && waveFrameCount[i] <= MOF_LAUNCHDELAY + baseSpeed / MOF_LAUNCHACCEL)
 			{
 				for (int j = getStartIndex(i); j <= getEndIndex(i); j++)
-					bullets[j]->adjustVelocityR(MOF_LAUNCHACCEL);
+					bullets[j]->adjustSpeed(MOF_LAUNCHACCEL);
 			}
 		}
 		// Update positions for non-spawners

@@ -1,7 +1,7 @@
 // Ruobin Chen
 // Made with sfml 2.5.1
 // Game inspired by Touhou Project
-// Total line count as of 10/2/2023 : 1667
+// Total line count as of 10/2/2023 : 1925
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -22,8 +22,8 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addDotBullet({ 450, 400 }, 0, 0);
     generalBullets->addTalismanBullet({ 500, 400 }, 0, 90);
     generalBullets->addBubbleBullet({ 550, 400 }, 0, 0);
-    generalBullets->addLaser({ 400, 200 }, 90, 5, 20, 0.25, 3, BLUE);
-    generalBullets->addSpawner({ 300, 400 }, 0, 0);
+    generalBullets->addLaser({ 400, 200 }, 90, 30, 20, 0.25, 99, BLUE);
+    generalBullets->addSpawner({ 300, 400 }, 0, 0, true);
 }
 int main(){
     srand(time(NULL));
