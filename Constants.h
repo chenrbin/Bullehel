@@ -94,25 +94,35 @@ namespace Constants {
 	// Desired behavior
 	const int MOF_PETALCOUNT = 5;
 	const float MOF_RADIUS1 = 90; // Radius of the inner petals
-	const float MOF_CIRCLEPORTIONCUT = 0.15f; // Percentage of first circle cut from spawning pattern
+	// Percentage of circle cut in pattern
+	const float MOF_LAYER1CUT = 0.15f, MOF_LAYER4CUT = 0.75f; // First layer in flower 1 and 2
+	const float MOF_LAYER2CUT = 0.5f, MOF_LAYER3CUT = 0.5f; // Both flowers use the same cut for layers 2 and 3
+
 	const int MOF_ARCDRAWTIME1 = 0.8 * FPS; // Frames to draw the first circle
 	const int MOF_LAUNCHDELAY = 90; // Number of frames after start of layer drawing to launch bullets
 	const float MOF_LAUNCHACCEL = 0.03; // Acceleration at launch
 	const vector<sf::Color> MOF_BULLETCOLORS = { RED, VIOLET, BLUE, GREEN, GREEN, CYAN };
-	const float MOF_EXTRASPEEDMULTIPLIER = 1.6; // Used for layer 3
+	const float MOF_FASTSPEEDMULTIPLIER = 1.6; // Used for layer 3
+	const float MOF_SLOWSPEEDMULTIPLIER = 0.85; // Used for layer 1, flower 2
 
 	// Calculations
 	// Base speed of spawners
-	const float MOF_SPAWNERMOVESPEED = 2 * PI * MOF_RADIUS1 * (1 - MOF_CIRCLEPORTIONCUT) / MOF_ARCDRAWTIME1; 
+	const float MOF_SPAWNERMOVESPEED = 2 * PI * MOF_RADIUS1 * (1 - MOF_LAYER1CUT) / MOF_ARCDRAWTIME1; 
 	// Number of frames to advance from centerPos to spawner starting position
-	const float MOF_FRAMEOFFSET = MOF_ARCDRAWTIME1 * (1 / (1 - MOF_CIRCLEPORTIONCUT) - 1) / 2;
+	const float MOF_FRAMEOFFSET = MOF_ARCDRAWTIME1 * (1 / (1 - MOF_LAYER1CUT) - 1) / 2;
 	
-	const float MOF_RADIUS2 = 2 * sin(PI / MOF_PETALCOUNT) * MOF_RADIUS1; // Circle 2 will be cut 50%
-	const float MOF_RADIUS3 = MOF_RADIUS2 * sqrt(2); // Circle 3 will be cut 50%
+	const float MOF_RADIUS2 = 2 * sin(PI / MOF_PETALCOUNT) * MOF_RADIUS1;
+	const float MOF_RADIUS3 = MOF_RADIUS2 * sqrt(2); 
 
+	// Can add constants to the end of checkpoints to make sure wave bullets are divisible by 5 * 4
 	const int MOF_LAYER1CHECKPOINT = MOF_ARCDRAWTIME1 + 1; // Time point where layer 1 is complete
 	const int MOF_LAYER2CHECKPOINT = MOF_LAYER1CHECKPOINT + PI * MOF_RADIUS2 / MOF_SPAWNERMOVESPEED; 
-	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / (MOF_EXTRASPEEDMULTIPLIER * MOF_SPAWNERMOVESPEED) + 2;
+	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / (MOF_FASTSPEEDMULTIPLIER * MOF_SPAWNERMOVESPEED) + 2;
+	// Frame checkpoints for second flower. Does not include refresh delay
+	const int MOF_LAYER4CHECKPOINT = MOF_LAYER3CHECKPOINT + MOF_LAYER1CHECKPOINT;
+	const int MOF_LAYER5CHECKPOINT = MOF_LAYER3CHECKPOINT + MOF_LAYER2CHECKPOINT;
+	const int MOF_LAYER6CHECKPOINT = MOF_LAYER3CHECKPOINT * 2;
+
 
 	// Handles "frame skipping" to increase density
 	// A cycle of DENOMINATOR frames, every cycle, each frame makes MINADVANCEMENTS advancements and REMAINDER frames advance one extra time
@@ -124,7 +134,6 @@ namespace Constants {
 	const float MOF_VARIANCECONSTANT = -187; // Constant that is manually tested. Decrease for bigger spread.
 	const vector<float> MOF_BULLETANGLEVARIANCE = { MOF_VARIANCECONSTANT, 2 * MOF_VARIANCECONSTANT, 3 * MOF_VARIANCECONSTANT, 4 * MOF_VARIANCECONSTANT };
 	
-
 	// Bullet flags
 	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
 

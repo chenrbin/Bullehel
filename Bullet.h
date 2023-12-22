@@ -51,7 +51,7 @@ public:
 		// No need to execute if any arguments are 0
 		if (speed == 0 || targetRadius == 0) return;
 		// Speed is passed in so it wouldn't have to be calculated manually
-		rotateBullet(speed * 360 / (2 * PI * targetRadius), speed);
+		rotateBullet(speed * 360 / (2 * PI * targetRadius), abs(speed));
 	}
 	// Sets the rotation and velocity to a specified angle
 	virtual void setRotation(float angleDegrees, float speed = 0) {
