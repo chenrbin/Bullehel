@@ -54,12 +54,10 @@ public:
 		setOrigin(box.width / 2.0f, box.height / 2.0f);
 	}
 	void alignX() {
-		const sf::FloatRect box = getLocalBounds();
-		setOrigin(getOrigin().x, box.height / 2.0f);
+		setOrigin(getSize().x / 2, getOrigin().y);
 	}
 	void alignY() {
-		const sf::FloatRect box = getLocalBounds();
-		setOrigin(box.width / 2.0f, getOrigin().y);
+		setOrigin(getOrigin().x, getSize().y / 2);
 	}
 	bool contains(float x, float y) {
 		return getGlobalBounds().contains(x, y);

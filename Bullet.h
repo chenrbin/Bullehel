@@ -149,6 +149,9 @@ public:
 	sf::Vector2f getVelocity() {
 		return sf::Vector2f(xVelocity, yVelocity);
 	}
+	float getSpeed() {
+		return sqrt(pow(xVelocity, 2) + pow(yVelocity, 2));
+	}
 	float getRotation() {
 		return sprite->getRotation();
 	}
@@ -170,7 +173,7 @@ protected:
 public:
 	CircleBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0) 
 		: Bullet(speed, angleDegrees) {
-		sprite = new SfCircleAtHome(WHITE, radius, position, true, color, STANDARDCIRCLEOUTLINE);
+		sprite = new SfCircleAtHome(WHITE, radius, position, true, color, max(STANDARDCIRCLEOUTLINE, radius / 3.f));
 		hitBoxRadius = radius;
 		sprite->setRotation(angleDegrees);
 	}
@@ -336,7 +339,6 @@ public:
 	void alignSprite() {
 		rect->alignY();
 		rect->setPosition(centerPos);
-		cir->alignCenter();
 	}
 	// Adds an offset to position instead of setting it
 	virtual void adjustPosition(float x, float y) {
@@ -366,10 +368,9 @@ public:
 		float angle2 = atan2f(dist.y, dist.x);
 		float newX = centerPos.x + (mag) * cos(angle2 - angle);
 		float newY = centerPos.y + (mag) * sin(angle2 - angle);
-		newRec.alignX();
+		newRec.alignY();
 		newRec.setPosition(centerPos);
 		sf::FloatRect bounds = newRec.getGlobalBounds();
-		bounds.top += rect->getOutlineThickness();
 		
 		// Both the hitbox of the rectangle and the circle
 		return bounds.contains(newX, newY) || (sqrt(pow(hitboxPos.x - centerPos.x, 2) + pow(hitboxPos.y - centerPos.y, 2)) <= hitbox.getRadius() + maxWidth / 2);

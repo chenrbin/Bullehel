@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, arrowhead bullet, mof second patterns
+	// Todo: convex shapes, arrowhead bullet, mercury poison rotation, initial deceleration, delay between waves
 	// mercury poison, resurrection butterfly, seamless ceiling
 	// Original ideas: coding, chemistry, dna spirals
 	// Size and dimensions
@@ -134,6 +134,11 @@ namespace Constants {
 	const float MOF_VARIANCECONSTANT = -187; // Constant that is manually tested. Decrease for bigger spread.
 	const vector<float> MOF_BULLETANGLEVARIANCE = { MOF_VARIANCECONSTANT, 2 * MOF_VARIANCECONSTANT, 3 * MOF_VARIANCECONSTANT, 4 * MOF_VARIANCECONSTANT };
 	
+	// Delay between waves, in frames
+	const int HGP_WAVEDELAY = 120;
+	// Number of rings in each wave
+	const int HGP_WAVECOUNT = 16;
+
 	// Bullet flags
 	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
 

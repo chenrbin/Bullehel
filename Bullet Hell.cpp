@@ -22,7 +22,8 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addDotBullet({ 450, 400 }, 0, 0);
     generalBullets->addTalismanBullet({ 500, 400 }, 0, 90);
     generalBullets->addBubbleBullet({ 550, 400 }, 0, 0);
-    generalBullets->addLaser({ 400, 200 }, 90, 30, 20, 0.25, 99, BLUE);
+    generalBullets->addLaser({ 400, 200 }, 0, 5, 20, 0.25, 99, BLUE);
+
     generalBullets->addSpawner({ 300, 400 }, 0, 0, true);
 }
 int main(){
@@ -58,11 +59,12 @@ int main(){
     manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2));
     manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
     manager.addPattern(new WindGod({ 400, 300 }, 0.3, 4));
+    manager.addPattern(new MercuryPoison(32, { 400, 200 }, 3, 2.2));
     manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
     cursor->rotate(90.f);
-    vector<string> menuText = { "Test", "BOWAP", "QED", "UFO", "GRT", "MOF"};
+    vector<string> menuText = { "Test", "BOWAP", "QED", "UFO", "GRT", "MOF", "HGP"};
     ClickableMenu danmaku(font, WHITE, menuText, 30, {850, 200}, 30, *cursor);
 
     sfClockAtHome bulletTimer;

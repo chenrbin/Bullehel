@@ -136,25 +136,25 @@ public:
 };
 
 // Class for patterns that groups bullets into "waves" to manipulate
-class wavePattern : public Pattern{
+class WavePattern : public Pattern{
 protected:
 	// Wave counters organize the bullets and allow manipulation of individual waves
 	vector<int> waveBulletCount; // Stores the number of remaining bullets per wave
 	vector<int> waveFrameCount; // Stores the time each wave has been active
 	int currentBulletCount; // Keeps track of the bullet count in each layer for the vectors. Used for patterns with no clearly defined wave sizes
 public:
-	wavePattern(float streamCount, float shotFrequency, float baseSpeed, sf::Vector2f sourcePos) : Pattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
+	WavePattern(float streamCount, float shotFrequency, float baseSpeed, sf::Vector2f sourcePos) : Pattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
 		currentBulletCount = 0;
 	}
 	// Add wave based on current bullets. Optionally use an argument instead of currentBulletCount
-	void addWave() {
-		waveBulletCount.push_back(currentBulletCount);
-		waveFrameCount.push_back(0);
-		currentBulletCount = 0;
-		checkValidWaves();
-	}
-	void addWave(int bulletCount) {
-		waveBulletCount.push_back(bulletCount);
+	void addWave(int bulletCount = 0) {
+		if (bulletCount == 0) {
+			waveBulletCount.push_back(currentBulletCount);
+			currentBulletCount = 0;
+		}
+		else {
+			waveBulletCount.push_back(bulletCount);
+		}
 		waveFrameCount.push_back(0);
 		checkValidWaves();
 	}
@@ -179,7 +179,7 @@ public:
 	int getEndIndex(int waveindex) { 
 		return getStartIndex(waveindex) + waveBulletCount[waveindex] - 1;
 	}
-	// Increment wave frame timers
+	// Increment wave frame timers. Needed for time tracking
 	void incrementWaveFrames() {
 		for (int& counter : waveFrameCount)
 			counter++;
@@ -280,7 +280,7 @@ public:
 	}
 };
 // Ring of bullets that along an imaginary circle that moves down and expands
-class FlyingSaucer : public wavePattern {
+class FlyingSaucer : public WavePattern {
 	bool alternate; // Alternate rotation
 	vector<sf::Vector2f> shotSources;
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -289,7 +289,7 @@ class FlyingSaucer : public wavePattern {
 	}
 public:
 	FlyingSaucer(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed)
-		:wavePattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
+		:WavePattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
 		alternate = false;
 		shotSources.push_back({ sourcePos.x - 180, sourcePos.y + 50 });
 		shotSources.push_back({ sourcePos.x + 180, sourcePos.y + 50 });
@@ -387,7 +387,7 @@ public:
 };
 
 // 3-layer floral pattern spawns
-class WindGod : public wavePattern{
+class WindGod : public WavePattern{
 	int varianceCounter; // Groups bullets into groups of 4. Used with angle variance vector
 	int spawnPoint; // Frame point where inner spawners became active
 	int cycleCounter;
@@ -402,7 +402,7 @@ class WindGod : public wavePattern{
 
 public:
 	WindGod(sf::Vector2f sourcePos, float refreshDelay, float baseSpeed, float duration = 0)
-		:wavePattern(0, 1 / (MOF_LAYER3CHECKPOINT / FPS + refreshDelay) / 2, baseSpeed, sourcePos) { 
+		:WavePattern(0, 1 / (MOF_LAYER3CHECKPOINT / FPS + refreshDelay) / 2, baseSpeed, sourcePos) { 
 		// StreamCount is unused because petal count is constant. 
 		// Shot frequency determines frequency of spawner refresh. 
 		spawnPoint = 0, varianceCounter = 0, cycleCounter = 0, shotAngle = 0, currentBulletCount = 0, phase = 0;
@@ -549,7 +549,6 @@ public:
 		}
 		else // Spawn bullets
 		{
-
 			int i = 0;
 			// Adjusts bullet density by manipulating the number of iterations per frame
 			if (cycleCounter % scaleDenom < scaleNumer % scaleDenom)
@@ -632,6 +631,84 @@ public:
 		}
 	}
 	
+};
+
+// Rings of curving orange and cyan circles
+class MercuryPoison : public WavePattern {
+	bool alternate;
+	sf::Vector2f shotSource; // Shot source will change after 16 shots
+	int shotCounter;
+	int waveEnd; // Used to time delay between waves
+public:
+	MercuryPoison(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed)
+		:WavePattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
+		alternate = true;
+		shotCounter = 0;
+		shotSource = { sourcePos.x + rand() % 200 - 100, sourcePos.y + rand() % 100 - 50 };
+		waveEnd = -HGP_WAVEDELAY;
+		expandBounds(0.2);
+	}
+	void spawnBullets() {
+		if (!active)
+			return;
+		if (frameCounter < waveEnd + HGP_WAVEDELAY) // Delay between waves
+			return;
+		if (isGoodToshoot()) {
+			// Random angle and position
+			int shotAngle = rand() % 360;
+			for (int i = 0; i < streamCount; i++) {
+				if (alternate) {
+					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360.f / streamCount, ORANGE, 8);
+					addCircleBullet(shotSource, baseSpeed * 1.11, shotAngle + i * 360.f / streamCount, ORANGE, 8);
+				}
+				else {
+					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360.f / streamCount, CYAN, 8);
+					addCircleBullet(shotSource, baseSpeed * 1.11, shotAngle + i * 360.f / streamCount, CYAN, 8);
+				}
+			}
+			addWave(streamCount * 2);
+			// Set the flags for rotation movement
+			if (alternate)
+				for (int i = bullets.size() - streamCount * 2; i < bullets.size(); i++)
+					bullets[i]->setFlag(REVERSEROTATION);
+			alternate = !alternate;
+			if (++shotCounter >= HGP_WAVECOUNT) { // Reroll shot source
+				shotCounter = 0;
+				shotSource = { sourcePos.x + rand() % 200 - 100, sourcePos.y + rand() % 100 - 50 };
+				waveEnd = frameCounter;
+			}
+			
+		}
+	}
+	void processMovement() {
+		if (!active)
+			return;
+		incrementWaveFrames();
+		// Process movement and ring expansion through rotation speed
+		for (int wave = 0; wave < waveBulletCount.size(); wave++) {
+			int frameCount = waveFrameCount[wave];
+			// Rotate each wave
+			for (int j = getStartIndex(wave); j <= getEndIndex(wave); j++) {
+				Bullet* bullet = bullets[j];
+				bullet->processMovement();
+				// Rotates the bullet only for a specific period in time
+				if (frameCount > 45 && frameCount <= 180)
+				{
+					if (bullet->getFlag() == REVERSEROTATION)
+						bullet->rotateBullet(0.375);
+					else
+						bullet->rotateBullet(-0.375);
+				}	
+			}
+		}
+	}
+	void resetPattern() {
+		Pattern::resetPattern();
+		waveEnd = -HGP_WAVEDELAY;
+		shotCounter = 0;
+		alternate = true;
+		shotSource = { sourcePos.x + rand() % 200 - 100, sourcePos.y + rand() % 100 - 50 };
+	}
 };
 
 // Manager for all patterns. Will be called by main, GameScreen, and others.
