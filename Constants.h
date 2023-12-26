@@ -3,8 +3,8 @@
 #include <iostream>
 using namespace std;
 namespace Constants {
-	// Todo: convex shapes, arrowhead bullet, mercury poison rotation, initial deceleration, delay between waves
-	// mercury poison, resurrection butterfly, seamless ceiling
+	// Todo: convex shapes, arrowhead bullet
+	// resurrection butterfly, seamless ceiling
 	// Original ideas: coding, chemistry, dna spirals
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
@@ -59,7 +59,6 @@ namespace Constants {
 	const sf::Color DEFAULTLASERCOLOR = BLUE;
 	const sf::Color DEFAULTSPAWNERCOLOR = SEETHROUGH;
 
-
 	const sf::Color PLAYERHITBOXCOLOR = RED;
 
 	// Pattern constants
@@ -68,6 +67,19 @@ namespace Constants {
 	// QED 
 	const int QED_VARIANCEX = 400, QED_VARIANCEY = 200; // Length range where bullets can spawn
 
+	// Bullet flags
+	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
+
+	// Print stuff for debug
+	template <typename T>
+	void print(T var) {
+		cout << "Value is: " << var << endl;
+	}
+}
+// Constant values for specific patterns
+// Flying Saucer
+namespace UFO {
+	using namespace Constants;
 	// Flying Saucer
 	// A bunch of variables that go into calculating rate of change in target radius. 
 	// Calculated by using calculus on a quadratic equation, s(x) = Ax^2 + Bx
@@ -79,72 +91,76 @@ namespace Constants {
 	// => A = TARGETVEL * t - TARGETPOS / t^2 = PHASE1ACCEL = (Actual acceleration) / 2
 	// TARGETVEL = 2 * PHASE1ACCEL * t + B => B = TARGETVEL - 2 * PHASE1ACCEL * t
 	// Phase 1: Accelerating growth. Phase 2: Constant growth. Phase 3: Constant shrink 
-	const float UFO_PHASE1CHECKPOINT = 60, UFO_PHASE2CHECKPOINT = 360; // Time point where phase ends (not duration. Phase 2 duration = checkpoint 2 - checkpoint 1)
-	const float UFO_PHASE2VELOCITY = 90, UFO_PHASE3VELOCITY = -20; 	// Velocity of radius expansion, units per second
-	const float UFO_TARGETPOS = 180, UFO_TARGETVEL = 45, UFO_TARGETTIME = UFO_PHASE1CHECKPOINT / FPS; // Target position, velocity at end of phase 1
+	const float PHASE1CHECKPOINT = 60, PHASE2CHECKPOINT = 360; // Time point where phase ends (not duration. Phase 2 duration = checkpoint 2 - checkpoint 1)
+	const float PHASE2VELOCITY = 90, PHASE3VELOCITY = -20; 	// Velocity of radius expansion, units per second
+	const float TARGETPOS = 180, TARGETVEL = 45, TARGETTIME = PHASE1CHECKPOINT / FPS; // Target position, velocity at end of phase 1
 	// PHASE1ACCEL is half the actual acceleration, 2A. Not an accurate name but best describes its purpose.
-	const float UFO_PHASE1ACCEL = (UFO_TARGETTIME * UFO_TARGETVEL - UFO_TARGETPOS) / UFO_TARGETTIME / UFO_TARGETTIME;
-	const float UFO_STARTVEL = UFO_TARGETVEL - 2 * UFO_PHASE1ACCEL * UFO_TARGETTIME;
+	const float PHASE1ACCEL = (TARGETTIME * TARGETVEL - TARGETPOS) / TARGETTIME / TARGETTIME;
+	const float STARTVEL = TARGETVEL - 2 * PHASE1ACCEL * TARGETTIME;
 	// Radius added by each phase, summed up for easier reading and calculation
-	const float UFO_PHASE1ADDEDRADIUS = UFO_PHASE1CHECKPOINT / FPS * UFO_STARTVEL + pow(UFO_PHASE1CHECKPOINT / FPS, 2) * UFO_PHASE1ACCEL;
-	const float UFO_PHASE2ADDEDRADIUS = (UFO_PHASE2CHECKPOINT - UFO_PHASE1CHECKPOINT) / FPS * UFO_PHASE2VELOCITY;
-	const vector<sf::Color> UFO_BULLETCOLORS = { BLUE, CYAN, MAGENTA, YELLOW, RED };
+	const float PHASE1ADDEDRADIUS = PHASE1CHECKPOINT / FPS * STARTVEL + pow(PHASE1CHECKPOINT / FPS, 2) * PHASE1ACCEL;
+	const float PHASE2ADDEDRADIUS = (PHASE2CHECKPOINT - PHASE1CHECKPOINT) / FPS * PHASE2VELOCITY;
+	const vector<sf::Color> BULLETCOLORS = { BLUE, CYAN, MAGENTA, YELLOW, RED };
+}
 
+// Wind God 
+namespace MOF {
+	using namespace Constants;
 	// WindGod
 	// Desired behavior
-	const int MOF_PETALCOUNT = 5;
-	const float MOF_RADIUS1 = 90; // Radius of the inner petals
+	const int PETALCOUNT = 5;
+	const float RADIUS1 = 90; // Radius of the inner petals
 	// Percentage of circle cut in pattern
-	const float MOF_LAYER1CUT = 0.15f, MOF_LAYER4CUT = 0.75f; // First layer in flower 1 and 2
-	const float MOF_LAYER2CUT = 0.5f, MOF_LAYER3CUT = 0.5f; // Both flowers use the same cut for layers 2 and 3
+	const float LAYER1CUT = 0.15f, LAYER4CUT = 0.75f; // First layer in flower 1 and 2
+	const float LAYER2CUT = 0.5f, LAYER3CUT = 0.5f; // Both flowers use the same cut for layers 2 and 3
 
-	const int MOF_ARCDRAWTIME1 = 0.8 * FPS; // Frames to draw the first circle
-	const int MOF_LAUNCHDELAY = 90; // Number of frames after start of layer drawing to launch bullets
-	const float MOF_LAUNCHACCEL = 0.03; // Acceleration at launch
-	const vector<sf::Color> MOF_BULLETCOLORS = { RED, VIOLET, BLUE, GREEN, GREEN, CYAN };
-	const float MOF_FASTSPEEDMULTIPLIER = 1.6; // Used for layer 3
-	const float MOF_SLOWSPEEDMULTIPLIER = 0.85; // Used for layer 1, flower 2
+	const int ARCDRAWTIME1 = 0.8 * FPS; // Frames to draw the first circle
+	const int LAUNCHDELAY = 90; // Number of frames after start of layer drawing to launch bullets
+	const float LAUNCHACCEL = 0.03; // Acceleration at launch
+	const vector<sf::Color> BULLETCOLORS = { RED, VIOLET, BLUE, GREEN, GREEN, CYAN };
+	const float FASTSPEEDMULTIPLIER = 1.6; // Used for layer 3
+	const float SLOWSPEEDMULTIPLIER = 0.85; // Used for layer 1, flower 2
 
 	// Calculations
 	// Base speed of spawners
-	const float MOF_SPAWNERMOVESPEED = 2 * PI * MOF_RADIUS1 * (1 - MOF_LAYER1CUT) / MOF_ARCDRAWTIME1; 
+	const float SPAWNERMOVESPEED = 2 * PI * RADIUS1 * (1 - LAYER1CUT) / ARCDRAWTIME1;
 	// Number of frames to advance from centerPos to spawner starting position
-	const float MOF_FRAMEOFFSET = MOF_ARCDRAWTIME1 * (1 / (1 - MOF_LAYER1CUT) - 1) / 2;
-	
-	const float MOF_RADIUS2 = 2 * sin(PI / MOF_PETALCOUNT) * MOF_RADIUS1;
-	const float MOF_RADIUS3 = MOF_RADIUS2 * sqrt(2); 
+	const float FRAMEOFFSET = ARCDRAWTIME1 * (1 / (1 - LAYER1CUT) - 1) / 2;
+
+	const float RADIUS2 = 2 * sin(PI / PETALCOUNT) * RADIUS1;
+	const float RADIUS3 = RADIUS2 * sqrt(2);
 
 	// Can add constants to the end of checkpoints to make sure wave bullets are divisible by 5 * 4
-	const int MOF_LAYER1CHECKPOINT = MOF_ARCDRAWTIME1 + 1; // Time point where layer 1 is complete
-	const int MOF_LAYER2CHECKPOINT = MOF_LAYER1CHECKPOINT + PI * MOF_RADIUS2 / MOF_SPAWNERMOVESPEED; 
-	const int MOF_LAYER3CHECKPOINT = MOF_LAYER2CHECKPOINT + PI * MOF_RADIUS3 / (MOF_FASTSPEEDMULTIPLIER * MOF_SPAWNERMOVESPEED) + 2;
+	const int LAYER1CHECKPOINT = ARCDRAWTIME1 + 1; // Time point where layer 1 is complete
+	const int LAYER2CHECKPOINT = LAYER1CHECKPOINT + PI * RADIUS2 / SPAWNERMOVESPEED;
+	const int LAYER3CHECKPOINT = LAYER2CHECKPOINT + PI * RADIUS3 / (FASTSPEEDMULTIPLIER * SPAWNERMOVESPEED) + 2;
 	// Frame checkpoints for second flower. Does not include refresh delay
-	const int MOF_LAYER4CHECKPOINT = MOF_LAYER3CHECKPOINT + MOF_LAYER1CHECKPOINT;
-	const int MOF_LAYER5CHECKPOINT = MOF_LAYER3CHECKPOINT + MOF_LAYER2CHECKPOINT;
-	const int MOF_LAYER6CHECKPOINT = MOF_LAYER3CHECKPOINT * 2;
+	const int LAYER4CHECKPOINT = LAYER3CHECKPOINT + LAYER1CHECKPOINT;
+	const int LAYER5CHECKPOINT = LAYER3CHECKPOINT + LAYER2CHECKPOINT;
+	const int LAYER6CHECKPOINT = LAYER3CHECKPOINT * 2;
 
 
 	// Handles "frame skipping" to increase density
 	// A cycle of DENOMINATOR frames, every cycle, each frame makes MINADVANCEMENTS advancements and REMAINDER frames advance one extra time
 	// Scalar fraction should be in simplest form for smoothest transition. Common denominator is not checked.
-	const int MOF_DSCALENUMER = 5, MOF_DSCALEDENOM = 4, MOF_DSCALENUMER2 = 5, MOF_DSCALEDENOM2 = 6, MOF_DSCALENUMER3 = 4, MOF_DSCALEDENOM3 = 3;
-	const int MOF_EXPECTEDBULLETS1 = 60, MOF_EXPECTEDBULLETS2 = 40, MOF_EXPECTEDBULLETS3 = 40;
+	const int DSCALENUMER = 5, DSCALEDENOM = 4, DSCALENUMER2 = 5, DSCALEDENOM2 = 6, DSCALENUMER3 = 4, DSCALEDENOM3 = 3;
+	const int EXPECTEDBULLETS1 = 60, EXPECTEDBULLETS2 = 40, EXPECTEDBULLETS3 = 40;
 
 	// Handles angle variance
-	const float MOF_VARIANCECONSTANT = -187; // Constant that is manually tested. Decrease for bigger spread.
-	const vector<float> MOF_BULLETANGLEVARIANCE = { MOF_VARIANCECONSTANT, 2 * MOF_VARIANCECONSTANT, 3 * MOF_VARIANCECONSTANT, 4 * MOF_VARIANCECONSTANT };
-	
+	const float VARIANCECONSTANT = -187; // Constant that is manually tested. Decrease for bigger spread.
+	const vector<float> BULLETANGLEVARIANCE = { VARIANCECONSTANT, 2 * VARIANCECONSTANT, 3 * VARIANCECONSTANT, 4 * VARIANCECONSTANT };
+}
+
+// Mercury Poison
+namespace HGP {
+	const int BULLETSIZE = 8;
 	// Delay between waves, in frames
-	const int HGP_WAVEDELAY = 120;
+	const int WAVEDELAY = 120;
 	// Number of rings in each wave
-	const int HGP_WAVECOUNT = 16;
+	const int WAVECOUNT = 16;
+	const float SPEEDMULTIPLIER = 1.17;
 
-	// Bullet flags
-	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
-
-	// Print stuff for debug
-	template <typename T>
-	void print(T var) {
-		cout << "Value is: " << var << endl;
-	}
+	// Frame point for rotating bullets
+	const int ROTATIONSTART = 45, ROTATIONEND = 180;
+	const float ROTATIONANGLE = 0.375f;
 }

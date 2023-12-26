@@ -1,4 +1,5 @@
 #pragma once
+#include "Constants.h"
 // Class to store bullet pattern templates. The base class is for random bullets and children have specific patterns.
 class Pattern : public sf::Drawable {
 protected:
@@ -298,6 +299,7 @@ public:
 		expandBounds(1);
 	}
 	void processMovement() {
+		using namespace UFO;
 		if (!active)
 			return;
 		incrementWaveFrames();
@@ -307,14 +309,14 @@ public:
 			float targetRadius = 0;
 			int frameCount = waveFrameCount[wave];
 			// Determine speed of ring expansion
-			if (frameCount < UFO_PHASE1CHECKPOINT) {
-				targetRadius = frameCount / FPS * UFO_STARTVEL + pow(frameCount / FPS, 2) * UFO_PHASE1ACCEL;
+			if (frameCount < PHASE1CHECKPOINT) {
+				targetRadius = frameCount / FPS * STARTVEL + pow(frameCount / FPS, 2) * PHASE1ACCEL;
 			}
-			else if (frameCount < UFO_PHASE2CHECKPOINT) {
-				targetRadius = (frameCount - UFO_PHASE1CHECKPOINT) / FPS * UFO_PHASE2VELOCITY + UFO_PHASE1ADDEDRADIUS;
+			else if (frameCount < PHASE2CHECKPOINT) {
+				targetRadius = (frameCount - PHASE1CHECKPOINT) / FPS * PHASE2VELOCITY + PHASE1ADDEDRADIUS;
 			}
 			else {
-				targetRadius = (frameCount - UFO_PHASE2CHECKPOINT) / FPS * UFO_PHASE3VELOCITY + UFO_PHASE1ADDEDRADIUS + UFO_PHASE2ADDEDRADIUS;
+				targetRadius = (frameCount - PHASE2CHECKPOINT) / FPS * PHASE3VELOCITY + PHASE1ADDEDRADIUS + PHASE2ADDEDRADIUS;
 			}
 			// Rotate each wave
 			for (int j = getStartIndex(wave); j <= getEndIndex(wave); j++) {
@@ -325,7 +327,7 @@ public:
 				else
 					bullet->rotateArc(targetRadius, -baseSpeed);
 				// Move bullets down
-				if (frameCount < UFO_PHASE2CHECKPOINT)
+				if (frameCount < PHASE2CHECKPOINT)
 					bullet->adjustPosition(0, 1);
 				else // Speed up descent after phase 2
 					bullet->adjustPosition(0, 1.1);
@@ -334,16 +336,17 @@ public:
 
 	}
 	void spawnBullets() {
+		using namespace UFO;
 		if (!active)
 			return;
 		if (isGoodToshoot()) {
 			int shotAngle = rand() % 360;
-			int randomColor = rand() % UFO_BULLETCOLORS.size();
+			int randomColor = rand() % BULLETCOLORS.size();
 			int sourceCount = 0;
 			for (sf::Vector2f pos : shotSources) {
 				int index = bullets.size(); // Save index to set flags
 				for (int i = 0; i < streamCount; i++) {
-					addTalismanBullet(pos, baseSpeed, shotAngle + i * 360 / streamCount, UFO_BULLETCOLORS[randomColor]);
+					addTalismanBullet(pos, baseSpeed, shotAngle + i * 360 / streamCount, BULLETCOLORS[randomColor]);
 				}
 				bool alternateCondition = pos.x > sourcePos.x ^ pos.y > sourcePos.y;
 				if (alternate) // Alternate decides a specific shotSource's rotation
@@ -402,7 +405,7 @@ class WindGod : public WavePattern{
 
 public:
 	WindGod(sf::Vector2f sourcePos, float refreshDelay, float baseSpeed, float duration = 0)
-		:WavePattern(0, 1 / (MOF_LAYER3CHECKPOINT / FPS + refreshDelay) / 2, baseSpeed, sourcePos) { 
+		:WavePattern(0, 1 / (MOF::LAYER3CHECKPOINT / FPS + refreshDelay) / 2, baseSpeed, sourcePos) { 
 		// StreamCount is unused because petal count is constant. 
 		// Shot frequency determines frequency of spawner refresh. 
 		spawnPoint = 0, varianceCounter = 0, cycleCounter = 0, shotAngle = 0, currentBulletCount = 0, phase = 0;
@@ -412,6 +415,7 @@ public:
 		refreshFrames = refreshDelay * FPS;
 	}
 	void spawnBullets() {
+		using namespace MOF;
 		if (!active)
 			return;
 		// There will be five spawners persistent as the first five items in the bullet vector
@@ -423,24 +427,25 @@ public:
 
 			// Erase existing spawners and set shot angle
 			if (frameCounter != 0) { // Delete existing spawners
-				for (int i = 0; i < MOF_PETALCOUNT; i++)
+				for (int i = 0; i < PETALCOUNT; i++)
 					bullets.erase(bullets.begin());
 				shotAngle = rand() % 360;
 			}
 			else {
 				shotAngle = 0; // Preset angle for first shot
 			}
+			
 			// Create new spawners
-			for (int i = 0; i < MOF_PETALCOUNT; i++)
-				addSpawner(sourcePos, MOF_SPAWNERMOVESPEED, 360 / MOF_PETALCOUNT * i + 180 + shotAngle);
+			for (int i = 0; i < PETALCOUNT; i++)
+				addSpawner(sourcePos, SPAWNERMOVESPEED, 360 / PETALCOUNT * i + 180 + shotAngle);
 			if (frameCounter == 0) // Accounting for spawners in the waves. They won't be deleted by OOB checks but will instantly be replaced, so there is no need to update these.
 				addWave(5); // Spawners will always be wave 0;
 
 			// Skip frames to set up starting position for spawners
-			for (int i = 0; i < MOF_PETALCOUNT; i++) {
-				for (int j = 0; j < MOF_FRAMEOFFSET; j++)
+			for (int i = 0; i < PETALCOUNT; i++) {
+				for (int j = 0; j < FRAMEOFFSET; j++)
 				{
-					bullets[i]->rotateArc(currentCircleRadius, MOF_SPAWNERMOVESPEED);
+					bullets[i]->rotateArc(currentCircleRadius, SPAWNERMOVESPEED);
 					bullets[i]->processMovement();
 				}
 				// Once spawners are in position, adjust spawner speed
@@ -449,6 +454,7 @@ public:
 		}
 	}
 	void processMovement() {
+		using namespace MOF;
 		if (!active)
 			return;
 		incrementWaveFrames();
@@ -456,14 +462,14 @@ public:
 		// Launch the talisman bullets if they're ready
 		for (int i = 1; i < waveBulletCount.size(); i++)
 		{
-			if (waveFrameCount[i] >= MOF_LAUNCHDELAY && waveFrameCount[i] <= MOF_LAUNCHDELAY + baseSpeed / MOF_LAUNCHACCEL)
+			if (waveFrameCount[i] >= LAUNCHDELAY && waveFrameCount[i] <= LAUNCHDELAY + baseSpeed / LAUNCHACCEL)
 			{
 				for (int j = getStartIndex(i); j <= getEndIndex(i); j++)
-					bullets[j]->adjustSpeed(MOF_LAUNCHACCEL);
+					bullets[j]->adjustSpeed(LAUNCHACCEL);
 			}
 		}
 		// Update positions for non-spawners
-		for (int i = MOF_PETALCOUNT; i < bullets.size(); i++)
+		for (int i = PETALCOUNT; i < bullets.size(); i++)
 			bullets[i]->processMovement();
 
 		// Process spawner behavior
@@ -472,78 +478,78 @@ public:
 			return;
 		}
 		// Start layer 2
-		if (frameCounter == spawnPoint + MOF_LAYER1CHECKPOINT) 
+		if (frameCounter == spawnPoint + LAYER1CHECKPOINT) 
 		{
 			addWave();
 			currentColorIndex = 1;
 			adjustSpawners();
 			// Adjust spawner velocity and position
-			for (int i = 0; i < MOF_PETALCOUNT; i++) {
+			for (int i = 0; i < PETALCOUNT; i++) {
 				// Angle towards starting point of layer 2. 
-				float angle = 360 / MOF_PETALCOUNT * i + 180 + shotAngle + 90 / MOF_PETALCOUNT;
-				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle + 180 / MOF_PETALCOUNT);
-				bullets[i]->setPosition(sourcePos.x + 2 * MOF_RADIUS1 * cos(angle / 180 * PI), sourcePos.y + 2 * MOF_RADIUS1 * sin(angle / 180 * PI));
+				float angle = 360 / PETALCOUNT * i + 180 + shotAngle + 90 / PETALCOUNT;
+				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle + 180 / PETALCOUNT);
+				bullets[i]->setPosition(sourcePos.x + 2 * RADIUS1 * cos(angle / 180 * PI), sourcePos.y + 2 * RADIUS1 * sin(angle / 180 * PI));
 			}
 		}
 		// Start layer 3
-		else if (frameCounter == spawnPoint + MOF_LAYER2CHECKPOINT) 
+		else if (frameCounter == spawnPoint + LAYER2CHECKPOINT) 
 		{
 			addWave();
 			currentColorIndex = 2;
 			adjustSpawners();
 			// Adjust spawner velocity and position
-			for (int i = 0; i < MOF_PETALCOUNT; i++) {
+			for (int i = 0; i < PETALCOUNT; i++) {
 				// Angle towards starting point of layer 3
-				float dist = 2.365 * MOF_RADIUS2; // No easy way of measuring this. Eyeballing from reference
-				float angle = 360 / MOF_PETALCOUNT * i + 180 + shotAngle - 90 / MOF_PETALCOUNT;
-				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle + 180 / MOF_PETALCOUNT);
+				float dist = 2.365 * RADIUS2; // No easy way of measuring this. Eyeballing from reference
+				float angle = 360 / PETALCOUNT * i + 180 + shotAngle - 90 / PETALCOUNT;
+				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle + 180 / PETALCOUNT);
 				bullets[i]->setPosition(sourcePos.x + dist * cos(angle / 180 * PI), sourcePos.y + dist * sin(angle / 180 * PI));
 			}
 		}
 		// Stop spawners after each flower
-		else if (frameCounter == spawnPoint + MOF_LAYER3CHECKPOINT || frameCounter == spawnPoint + MOF_LAYER6CHECKPOINT + refreshFrames) {
+		else if (frameCounter == spawnPoint + LAYER3CHECKPOINT || frameCounter == spawnPoint + LAYER6CHECKPOINT + refreshFrames) {
 			addWave();
-			for (int i = 0; i < MOF_PETALCOUNT; i++)
+			for (int i = 0; i < PETALCOUNT; i++)
 				bullets[i]->setVelocity(0, 0);
 		}
 		
 		// Start flower 2 
 		// Start layer 1
-		else if (frameCounter == spawnPoint + MOF_LAYER3CHECKPOINT + refreshFrames) {
+		else if (frameCounter == spawnPoint + LAYER3CHECKPOINT + refreshFrames) {
 			currentColorIndex = 3;
 			adjustSpawners();
 			shotAngle = rand() % 360; // Reroll shot angle
 
 			// Adjust spawner velocity and position
-			for (int i = 0; i < MOF_PETALCOUNT; i++) {
-				bullets[i]->setVelocityR(adjustedSpawnerSpeed, 360 / MOF_PETALCOUNT * i + shotAngle);
+			for (int i = 0; i < PETALCOUNT; i++) {
+				bullets[i]->setVelocityR(adjustedSpawnerSpeed, 360 / PETALCOUNT * i + shotAngle);
 				bullets[i]->setPosition(sourcePos.x, sourcePos.y);
 			}
 		}
 		// Start layer 2
-		else if (frameCounter == spawnPoint + MOF_LAYER4CHECKPOINT + refreshFrames) {
+		else if (frameCounter == spawnPoint + LAYER4CHECKPOINT + refreshFrames) {
 			addWave();
 			currentColorIndex = 4;
 			adjustSpawners();
 			// Adjust spawner velocity and position
-			for (int i = 0; i < MOF_PETALCOUNT; i++) {
+			for (int i = 0; i < PETALCOUNT; i++) {
 				// Angle towards starting point of layer 2. 
-				float angle = 360 / MOF_PETALCOUNT * i + shotAngle - 18;
-				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle - 180 / MOF_PETALCOUNT);
-				bullets[i]->setPosition(sourcePos.x + 2 * MOF_RADIUS1 * cos(angle / 180 * PI), sourcePos.y + 2 * MOF_RADIUS1 * sin(angle / 180 * PI));
+				float angle = 360 / PETALCOUNT * i + shotAngle - 18;
+				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle - 180 / PETALCOUNT);
+				bullets[i]->setPosition(sourcePos.x + 2 * RADIUS1 * cos(angle / 180 * PI), sourcePos.y + 2 * RADIUS1 * sin(angle / 180 * PI));
 			}
 		}
 		// Start layer 3
-		else if (frameCounter == spawnPoint + MOF_LAYER5CHECKPOINT + refreshFrames) {
+		else if (frameCounter == spawnPoint + LAYER5CHECKPOINT + refreshFrames) {
 			addWave();
 			currentColorIndex = 5;
 			adjustSpawners();
 			// Adjust spawner velocity and position
-			for (int i = 0; i < MOF_PETALCOUNT; i++) {
+			for (int i = 0; i < PETALCOUNT; i++) {
 				// Angle towards starting point of layer 3
-				float dist = 2.365 * MOF_RADIUS2; // No easy way of measuring this. Eyeballing from reference
-				float angle = 360 / MOF_PETALCOUNT * i + shotAngle + 90 / MOF_PETALCOUNT;
-				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle - 180 / MOF_PETALCOUNT);
+				float dist = 2.365 * RADIUS2; // No easy way of measuring this. Eyeballing from reference
+				float angle = 360 / PETALCOUNT * i + shotAngle + 90 / PETALCOUNT;
+				bullets[i]->setVelocityR(adjustedSpawnerSpeed, angle - 180 / PETALCOUNT);
 				bullets[i]->setPosition(sourcePos.x + dist * cos(angle / 180 * PI), sourcePos.y + dist * sin(angle / 180 * PI));
 			}
 		}
@@ -555,21 +561,21 @@ public:
 				i--; // Extend loop
 			cycleCounter = (cycleCounter >= scaleDenom - 1) ? 0 : cycleCounter + 1;
 			for (; i < scaleNumer / scaleDenom; i++) {
-				for (int j = 0; j < MOF_PETALCOUNT; j++) {
+				for (int j = 0; j < PETALCOUNT; j++) {
 					Bullet* bullet = bullets[j];
 					// 90 aims bullets to petal centers as spawners are tangential. Also add variance to group by quads.
 					if (phase < 4) {
-						addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() + 90 + 15 + MOF_BULLETANGLEVARIANCE[varianceCounter] / bulletDensity, MOF_BULLETCOLORS[currentColorIndex]);
+						addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() + 90 + 15 + BULLETANGLEVARIANCE[varianceCounter] / bulletDensity, BULLETCOLORS[currentColorIndex]);
 						bullet->rotateArc(currentCircleRadius, adjustedSpawnerSpeed);
 					}
 					else {
-						addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() - 90 - 10 - MOF_BULLETANGLEVARIANCE[varianceCounter] / bulletDensity, MOF_BULLETCOLORS[currentColorIndex]);
+						addTalismanBullet(bullet->getPosition(), 0, bullet->getRotation() - 90 - 10 - BULLETANGLEVARIANCE[varianceCounter] / bulletDensity, BULLETCOLORS[currentColorIndex]);
 						bullet->rotateArc(currentCircleRadius, -adjustedSpawnerSpeed);
 					}
 					bullet->processMovement();
 					incrementCurrentBulletCount();
 				}
-				varianceCounter = varianceCounter >= MOF_BULLETANGLEVARIANCE.size() - 1 ? 0 : varianceCounter + 1;
+				varianceCounter = varianceCounter >= BULLETANGLEVARIANCE.size() - 1 ? 0 : varianceCounter + 1;
 			}
 		}
 		
@@ -581,53 +587,55 @@ public:
 	}
 	// Calculate current pattern phase for cleaner code
 	void calculatePhase() {
+		using namespace MOF;
 		// Using += for phases before a resting phase
-		if (frameCounter < spawnPoint + MOF_LAYER1CHECKPOINT)
+		if (frameCounter < spawnPoint + LAYER1CHECKPOINT)
 			phase = 1; // First flower, first layer
-		else if (frameCounter < spawnPoint + MOF_LAYER2CHECKPOINT)
+		else if (frameCounter < spawnPoint + LAYER2CHECKPOINT)
 			phase = 2; // First flower, second layer
-		else if (frameCounter <= spawnPoint + MOF_LAYER3CHECKPOINT)
+		else if (frameCounter <= spawnPoint + LAYER3CHECKPOINT)
 			phase = 3; // First flower, third layer
-		else if (frameCounter < spawnPoint + MOF_LAYER3CHECKPOINT + refreshFrames)
+		else if (frameCounter < spawnPoint + LAYER3CHECKPOINT + refreshFrames)
 			phase = 4; // Resting phase before second flower
-		else if (frameCounter < spawnPoint + MOF_LAYER4CHECKPOINT + refreshFrames)
+		else if (frameCounter < spawnPoint + LAYER4CHECKPOINT + refreshFrames)
 			phase = 5; // Second flower, first layer
-		else if (frameCounter < spawnPoint + MOF_LAYER5CHECKPOINT + refreshFrames)
+		else if (frameCounter < spawnPoint + LAYER5CHECKPOINT + refreshFrames)
 			phase = 6; // Second flower, second layer
-		else if (frameCounter <= spawnPoint + MOF_LAYER6CHECKPOINT + refreshFrames)
+		else if (frameCounter <= spawnPoint + LAYER6CHECKPOINT + refreshFrames)
 			phase = 7; // Second flower, third layer
-		else if (frameCounter < spawnPoint + MOF_LAYER6CHECKPOINT + refreshFrames * 2)
+		else if (frameCounter < spawnPoint + LAYER6CHECKPOINT + refreshFrames * 2)
 			phase = 8; // Resting phase before pattern resets
 	}
 	// Grouping code for setting variables based on current layer
 	void adjustSpawners() {
+		using namespace MOF;
 		if (phase == 1) { // Layer 1
-			currentCircleRadius = MOF_RADIUS1;
-			bulletDensity = MOF_EXPECTEDBULLETS1 / (1 - MOF_LAYER1CUT);
-			scaleNumer = MOF_DSCALENUMER;
-			scaleDenom = MOF_DSCALEDENOM;
+			currentCircleRadius = RADIUS1;
+			bulletDensity = EXPECTEDBULLETS1 / (1 - LAYER1CUT);
+			scaleNumer = DSCALENUMER;
+			scaleDenom = DSCALEDENOM;
 			// Add offset to spawner speed to make bullets line up
-			adjustedSpawnerSpeed = MOF_SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.1;
+			adjustedSpawnerSpeed = SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.1;
 		}
 		else if (phase == 2 || phase == 6) { // Layer 2
-			currentCircleRadius = MOF_RADIUS2;
-			bulletDensity = MOF_EXPECTEDBULLETS2 * 2;
-			adjustedSpawnerSpeed = MOF_SPAWNERMOVESPEED * scaleDenom / scaleNumer + 0.2;
+			currentCircleRadius = RADIUS2;
+			bulletDensity = EXPECTEDBULLETS2 * 2;
+			adjustedSpawnerSpeed = SPAWNERMOVESPEED * scaleDenom / scaleNumer + 0.2;
 		}
 		else if (phase == 3 || phase == 7) { // Layer 3
-			bulletDensity = MOF_EXPECTEDBULLETS3 * 2;
-			currentCircleRadius = MOF_RADIUS3;
-			scaleNumer = MOF_DSCALENUMER3;
-			scaleDenom = MOF_DSCALEDENOM3;
-			adjustedSpawnerSpeed = MOF_FASTSPEEDMULTIPLIER * MOF_SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.25;
+			bulletDensity = EXPECTEDBULLETS3 * 2;
+			currentCircleRadius = RADIUS3;
+			scaleNumer = DSCALENUMER3;
+			scaleDenom = DSCALEDENOM3;
+			adjustedSpawnerSpeed = FASTSPEEDMULTIPLIER * SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.25;
 		}
 		if (phase == 5) { // Layer 1, flower 2
-			currentCircleRadius = MOF_RADIUS1;
-			bulletDensity = MOF_EXPECTEDBULLETS1 * 1.2;
-			scaleNumer = MOF_DSCALENUMER;
-			scaleDenom = MOF_DSCALEDENOM;
+			currentCircleRadius = RADIUS1;
+			bulletDensity = EXPECTEDBULLETS1 * 1.2;
+			scaleNumer = DSCALENUMER;
+			scaleDenom = DSCALEDENOM;
 			// Add offset to spawner speed to make bullets line up
-			adjustedSpawnerSpeed = MOF_SLOWSPEEDMULTIPLIER * MOF_SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.1;
+			adjustedSpawnerSpeed = SLOWSPEEDMULTIPLIER * SPAWNERMOVESPEED * scaleDenom / scaleNumer - 0.1;
 		}
 	}
 	
@@ -645,25 +653,26 @@ public:
 		alternate = true;
 		shotCounter = 0;
 		shotSource = { sourcePos.x + rand() % 200 - 100, sourcePos.y + rand() % 100 - 50 };
-		waveEnd = -HGP_WAVEDELAY;
+		waveEnd = -HGP::WAVEDELAY;
 		expandBounds(0.2);
 	}
 	void spawnBullets() {
+		using namespace HGP;
 		if (!active)
 			return;
-		if (frameCounter < waveEnd + HGP_WAVEDELAY) // Delay between waves
+		if (frameCounter < waveEnd + WAVEDELAY) // Delay between waves
 			return;
 		if (isGoodToshoot()) {
 			// Random angle and position
 			int shotAngle = rand() % 360;
 			for (int i = 0; i < streamCount; i++) {
 				if (alternate) {
-					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360.f / streamCount, ORANGE, 8);
-					addCircleBullet(shotSource, baseSpeed * 1.11, shotAngle + i * 360.f / streamCount, ORANGE, 8);
+					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360.f / streamCount, ORANGE, BULLETSIZE);
+					addCircleBullet(shotSource, baseSpeed * SPEEDMULTIPLIER, shotAngle + (i + 0.5) * 360.f / streamCount, ORANGE, BULLETSIZE);
 				}
 				else {
-					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360.f / streamCount, CYAN, 8);
-					addCircleBullet(shotSource, baseSpeed * 1.11, shotAngle + i * 360.f / streamCount, CYAN, 8);
+					addCircleBullet(shotSource, baseSpeed, shotAngle + i * 360.f / streamCount, CYAN, BULLETSIZE);
+					addCircleBullet(shotSource, baseSpeed * SPEEDMULTIPLIER, shotAngle + (i + 0.5) * 360.f / streamCount, CYAN, BULLETSIZE);
 				}
 			}
 			addWave(streamCount * 2);
@@ -672,7 +681,7 @@ public:
 				for (int i = bullets.size() - streamCount * 2; i < bullets.size(); i++)
 					bullets[i]->setFlag(REVERSEROTATION);
 			alternate = !alternate;
-			if (++shotCounter >= HGP_WAVECOUNT) { // Reroll shot source
+			if (++shotCounter >= WAVECOUNT) { // Reroll shot source
 				shotCounter = 0;
 				shotSource = { sourcePos.x + rand() % 200 - 100, sourcePos.y + rand() % 100 - 50 };
 				waveEnd = frameCounter;
@@ -681,6 +690,7 @@ public:
 		}
 	}
 	void processMovement() {
+		using namespace HGP;
 		if (!active)
 			return;
 		incrementWaveFrames();
@@ -692,19 +702,19 @@ public:
 				Bullet* bullet = bullets[j];
 				bullet->processMovement();
 				// Rotates the bullet only for a specific period in time
-				if (frameCount > 45 && frameCount <= 180)
+				if (frameCount > ROTATIONSTART && frameCount <= ROTATIONEND)
 				{
 					if (bullet->getFlag() == REVERSEROTATION)
-						bullet->rotateBullet(0.375);
+						bullet->rotateBullet(ROTATIONANGLE);
 					else
-						bullet->rotateBullet(-0.375);
+						bullet->rotateBullet(-ROTATIONANGLE);
 				}	
 			}
 		}
 	}
 	void resetPattern() {
 		Pattern::resetPattern();
-		waveEnd = -HGP_WAVEDELAY;
+		waveEnd = -HGP::WAVEDELAY;
 		shotCounter = 0;
 		alternate = true;
 		shotSource = { sourcePos.x + rand() % 200 - 100, sourcePos.y + rand() % 100 - 50 };

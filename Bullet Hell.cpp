@@ -1,7 +1,7 @@
 // Ruobin Chen
 // Made with sfml 2.5.1
 // Game inspired by Touhou Project
-// Total line count as of 10/2/2023 : 1925
+// Total line count as of 12/26/2023 : 2118
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -59,7 +59,7 @@ int main(){
     manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2));
     manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
     manager.addPattern(new WindGod({ 400, 300 }, 0.3, 4));
-    manager.addPattern(new MercuryPoison(32, { 400, 200 }, 3, 2.2));
+    manager.addPattern(new MercuryPoison(32, { 400, 200 }, 3, 2.5));
     manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
