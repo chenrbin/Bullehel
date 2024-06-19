@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-
+#include <algorithm>
 using namespace std;
 using namespace Constants;
 class Player {

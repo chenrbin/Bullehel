@@ -1,4 +1,5 @@
 #pragma once
+#include <numeric>
 #include "Constants.h"
 // Class to store bullet pattern templates. The base class is for random bullets and children have specific patterns.
 class Pattern : public sf::Drawable {

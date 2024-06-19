@@ -10,7 +10,7 @@ FetchContent_Declare(SFML
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(ShootEmUp ShootEmUp.cpp)
+add_executable(ShootEmUp src/ShootEmUp.cpp)
 target_link_libraries(ShootEmUp PRIVATE sfml-graphics sfml-audio)
 target_compile_features(ShootEmUp PRIVATE cxx_std_17)
 

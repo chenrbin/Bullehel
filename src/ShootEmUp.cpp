@@ -6,6 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <numeric>
+#include <cmath>
 #include "Constants.h"
 #include "Drawings.h"
 #include "Mechanisms.h"
@@ -28,22 +29,22 @@ void addTestBullets(Pattern* generalBullets) {
 }
 int main(){
     srand(time(NULL));
-    sf::Texture texture;
-    if (!texture.loadFromFile("reimoo2.png"))
+    sf::Texture playerTexture;
+    if (!playerTexture.loadFromFile(PLAYERTEXTUREFILEPATH))
         return -1;
     sf::Font font;
-    if (!font.loadFromFile("font.ttf"))
+    if (!font.loadFromFile(FONTFILEPATH))
         return -1;
     sf::ContextSettings windowSettings;
     windowSettings.antialiasingLevel = 8;
-    sf::RenderWindow window(sf::VideoMode(1600, 900), "Bullet Hell", sf::Style::Close | sf::Style::Titlebar, windowSettings);
+    sf::RenderWindow window(sf::VideoMode(1600, 900), "ShootEmUp", sf::Style::Close | sf::Style::Titlebar, windowSettings);
     window.setKeyRepeatEnabled(false);
     window.setFramerateLimit(FPS);
 
     SfTextAtHome hitText(font, WHITE, "Pichuun", 40, { 1000, 500 }, true, false, true, true);
     FadeText hitFade(hitText, 0, 1);
 
-    Player reimoo(PLAYERSTANDARDSPEED, PLAYERHITBOXRADIUS, texture);
+    Player reimoo(PLAYERSTANDARDSPEED, PLAYERHITBOXRADIUS, playerTexture);
     BorderRects borderRects;
     PatternManager manager;
     GameScreen screen(reimoo, &borderRects, &manager, &hitFade);

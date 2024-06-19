@@ -1,11 +1,18 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <string>
+
 using namespace std;
 namespace Constants {
 	// Todo: convex shapes, arrowhead bullet
 	// resurrection butterfly, seamless ceiling
 	// Original ideas: coding, chemistry, dna spirals
+
+	// File paths
+	const string PLAYERTEXTUREFILEPATH = "assets/reimoo.png";
+	const string FONTFILEPATH = "assets/font.ttf";
+
 	// Size and dimensions
 	const int WINDOWWIDTH = 1600, WINDOWHEIGHT = 900;
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
