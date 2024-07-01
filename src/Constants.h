@@ -28,6 +28,7 @@ namespace Constants {
 	const float STANDARDDOTBULLETRADIUS = 4;
 	const float STANDARDTALISMANBULLETRADIUS = 4;
 	const float STANDARDBUBBLEBULLETRADIUS = 15;
+	const float STANDARDARROWHEADBULLETRADIUS = 3;
 	const float STANDARDSPAWNERRADIUS = 4;
 	const float STARTINGLASEROUTLINE = 1;
 	const float FINALLASEROUTLINE = 2; // Not used currently
@@ -64,6 +65,8 @@ namespace Constants {
 	const sf::Color DEFAULTTALISMANBULLETCOLOR = MAGENTA;
 	const sf::Color DEFAULTBUBBLEBULLETCOLOR = RED;
 	const sf::Color DEFAULTLASERCOLOR = BLUE;
+	const sf::Color DEFAULTARROWHEADBULLETCOLOR = RED;
+
 	const sf::Color DEFAULTSPAWNERCOLOR = SEETHROUGH;
 
 	const sf::Color PLAYERHITBOXCOLOR = RED;

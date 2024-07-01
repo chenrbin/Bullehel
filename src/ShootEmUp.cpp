@@ -23,8 +23,8 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addDotBullet({ 450, 400 }, 0, 0);
     generalBullets->addTalismanBullet({ 500, 400 }, 0, 90);
     generalBullets->addBubbleBullet({ 550, 400 }, 0, 0);
-    generalBullets->addLaser({ 400, 200 }, 0, 5, 20, 0.25, 99, BLUE);
-
+    generalBullets->addLaser({ 400, 200 }, 0, 10, 20, 0.25, 99, BLUE);
+    generalBullets->addArrowheadBullet({400, 500}, 0, 90, ORANGE, 10);
     generalBullets->addSpawner({ 300, 400 }, 0, 0, true);
 }
 int main(){
@@ -47,7 +47,7 @@ int main(){
     Player reimoo(PLAYERSTANDARDSPEED, PLAYERHITBOXRADIUS, playerTexture);
     BorderRects borderRects;
     PatternManager manager;
-    GameScreen screen(reimoo, &borderRects, &manager, &hitFade);
+    GameScreen gameScreen(&reimoo, &borderRects, &manager, &hitFade);
 
     sfClockAtHome fpsTimer;
     int fpsCounter = 0;
@@ -80,8 +80,7 @@ int main(){
             fpsCounter = 0;
         }
         fpsCounter++;
-
-        screen.doStuff();
+        gameScreen.doStuff();
         sf::Event event;
         bool menuClicked = false;
         while (window.pollEvent(event))
@@ -107,10 +106,10 @@ int main(){
 
                 break;
             case sf::Event::MouseMoved:
-                danmaku.updateMouseMove(event.mouseMove.x, event.mouseMove.y);
+                danmaku.onMouseMove(event.mouseMove.x, event.mouseMove.y);
                 break;
             case sf::Event::MouseButtonPressed:
-                if (danmaku.updateMouseClick(event.mouseButton.x, event.mouseButton.y)) {
+                if (danmaku.onMouseClick(event.mouseButton.x, event.mouseButton.y)) {
                     manager.deactivateAllPatterns();
                     manager[danmaku.getCursorPos()]->setActive(true); // Index 0 is generalBullets
                 }
@@ -120,7 +119,7 @@ int main(){
             }
         }
         window.clear();
-        screen.drawScreen(window);
+        window.draw(gameScreen);
         window.draw(fpsText);
         window.draw(danmaku);
         hitFade.drawAnimation(window);

@@ -127,7 +127,7 @@ public:
 		cursor.setPosition(texts[cursorPos].getPosition().x - 5, texts[cursorPos].getPosition().y + 5);
 	}
 	// Update cursor based on mouse position. Return true if a text is selected
-	bool updateMouseClick(int x, int y) {
+	bool onMouseClick(int x, int y) {
 		for (int i = 0; i < texts.size(); i++) {
 			if (texts[i].contains(x, y)) {
 				cursorPos = i;
@@ -138,7 +138,7 @@ public:
 		return false;
 	}
 	// Slightly different from mouse click. Needed for sound effect conditionals
-	bool updateMouseMove(int x, int y) {
+	bool onMouseMove(int x, int y) {
 		for (int i = 0; i < texts.size(); i++) {
 			if (texts[i].contains(x, y)) {
 				if (cursorPos != i) {

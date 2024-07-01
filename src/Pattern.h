@@ -100,7 +100,7 @@ public:
 		screenBounds.height += SCREENHEIGHT * 2 * increaseFactor;
 	}
 	// Compares shotFrequency with frameCounter and is used by spawnBullets to determine when to shoot.
-	virtual bool isGoodToshoot() {
+	virtual bool canShoot() {
 		int framesPerShot;
 		if (shotFrequency == 0) {
 			if (!shootOnlyOnce) {
@@ -112,7 +112,7 @@ public:
 		else
 			return frameCounter % int(FPS / shotFrequency) == 0;
 	}
-	// All addBullet functions use a source position and polar coordinates
+	// All addBullet functions use a source position and polar speed vector
 	void addCircleBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTCIRCLEBULLETCOLOR, int radius = STANDARDCIRCLEBULLETRADIUS) {
 		bullets.push_back(new CircleBullet(position, speed, angleDegrees, color, radius));
 	}
@@ -130,6 +130,9 @@ public:
 	}
 	void addLaser(sf::Vector2f position, float angleDegrees = 0, float maxWidth = 0, float growthSpeed = 1, float activationDelay = 0, float activeDuration = 0, sf::Color color = DEFAULTLASERCOLOR) {
 		bullets.push_back(new Laser(position, angleDegrees, maxWidth, growthSpeed, activationDelay, activeDuration, color));
+	}
+	void addArrowheadBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTARROWHEADBULLETCOLOR, int radius = STANDARDARROWHEADBULLETRADIUS){
+		bullets.push_back(new ArrowheadBullet(position, speed, angleDegrees, color, radius));
 	}
 	// Spawners are always inserted at the beginning of the array
 	void addSpawner(sf::Vector2f position, float speed = 0, float angleDegrees = 0, bool visible = false, sf::Color color = DEFAULTSPAWNERCOLOR, int radius = STANDARDSPAWNERRADIUS) {
@@ -232,7 +235,7 @@ public:
 	void spawnBullets() {
 		if (!active)
 			return;
-		if (isGoodToshoot()) {
+		if (canShoot()) {
 			// Rotation is constant. Bullet count, frequency, and speed can be set.
 			int num = BOWAP_ANGLEOFFSET + BOWAP_ANGLEVELOCITY * frameCounter / FPS + BOWAP_ANGLEACCELERATION * pow(frameCounter / FPS, 2);
 			for (int i = 0; i < streamCount; i++)
@@ -268,7 +271,7 @@ public:
 	void spawnBullets() {
 		if (!active)
 			return;
-		if (isGoodToshoot()) {
+		if (canShoot()) {
 			// Random angle and position
 			int shotAngle = rand() % 360;
 			sf::Vector2f shotSource;
@@ -340,7 +343,7 @@ public:
 		using namespace UFO;
 		if (!active)
 			return;
-		if (isGoodToshoot()) {
+		if (canShoot()) {
 			int shotAngle = rand() % 360;
 			int randomColor = rand() % BULLETCOLORS.size();
 			int sourceCount = 0;
@@ -375,7 +378,7 @@ public:
 	void spawnBullets() {
 		if (!active)
 			return;
-		if (isGoodToshoot()) {
+		if (canShoot()) {
 			// Random angle and position
 			int shotAngle = rand() % 360;
 			bool useDotBullets = rand() % 2;
@@ -420,7 +423,7 @@ public:
 		if (!active)
 			return;
 		// There will be five spawners persistent as the first five items in the bullet vector
-		if (isGoodToshoot()) { // Reset to layer 1
+		if (canShoot()) { // Reset to layer 1
 			spawnPoint = frameCounter;
 			currentColorIndex = 0;
 			calculatePhase();
@@ -586,7 +589,7 @@ public:
 		varianceCounter = 0;
 		cycleCounter = 0;
 	}
-	// Calculate current pattern phase for cleaner code
+	// Calculate current pattern phase
 	void calculatePhase() {
 		using namespace MOF;
 		// Using += for phases before a resting phase
@@ -663,7 +666,7 @@ public:
 			return;
 		if (frameCounter < waveEnd + WAVEDELAY) // Delay between waves
 			return;
-		if (isGoodToshoot()) {
+		if (canShoot()) {
 			// Random angle and position
 			int shotAngle = rand() % 360;
 			for (int i = 0; i < streamCount; i++) {

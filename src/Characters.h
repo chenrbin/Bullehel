@@ -3,13 +3,16 @@
 #include <algorithm>
 using namespace std;
 using namespace Constants;
-class Player {
+class Player : public sf::Drawable {
 	SfCircleAtHome hitbox; // Actual hitbox is invisible and slightly smaller.
 	sf::Sprite playerSprite;
 	sf::FloatRect movementBounds;
 	float moveSpeed, hitboxRadius;
 	bool focused;
 
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+		target.draw(playerSprite, states);
+	}
 public:
 	Player() {
 		moveSpeed = 0;
@@ -58,9 +61,6 @@ public:
 		else focused = false;
 		if (nextMove != sf::Vector2f{0, 0})
 			move(nextMove);
-	}
-	void drawCharacter(sf::RenderWindow& window) {
-		window.draw(playerSprite);
 	}
 	sf::Vector2f getPosition() {
 		return hitbox.getPosition();

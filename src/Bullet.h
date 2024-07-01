@@ -5,7 +5,7 @@
 // Game projectiles
 class Bullet : public sf::Drawable { // Abstract base class
 protected:
-	sf::Shape* sprite; // Base sprite. Faces right by default (rotation 0).
+	sf::Shape* sprite; // Base sprite. Faces right by default (rotatfion 0).
 	char flag; // Flag code that will be used for various purposes
 	float xVelocity, yVelocity;
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -57,8 +57,8 @@ public:
 	virtual void setRotation(float angleDegrees, float speed = 0) {
 		sprite->setRotation(angleDegrees);
 		float currentSpeed = (speed != 0) ? speed : sqrt(pow(xVelocity, 2) + pow(yVelocity, 2));
-		xVelocity = cos((angleDegrees) * PI / 180) * currentSpeed;
-		yVelocity = sin((angleDegrees) * PI / 180) * currentSpeed;
+		xVelocity = cos((angleDegrees)*PI / 180) * currentSpeed;
+		yVelocity = sin((angleDegrees)*PI / 180) * currentSpeed;
 	}
 	// Given a rectangular coordinate, aim bullet towards it
 	virtual void aimBullet(sf::Vector2f targetPos) {
@@ -77,12 +77,12 @@ public:
 		if (yVelocity + yOffset == 0 && xVelocity + xOffset == 0)
 			return;
 		float angle;
-		angle = atan2f((yVelocity + yOffset), (xVelocity + xOffset)) * 180 / PI; 
+		angle = atan2f((yVelocity + yOffset), (xVelocity + xOffset)) * 180 / PI;
 		sprite->setRotation(angle);
 	}
 #pragma endregion
 
-	
+
 #pragma region Position and Velocity Transformations
 	// Adds an offset to position instead of setting it
 	virtual void adjustPosition(float x, float y) {
@@ -155,12 +155,12 @@ public:
 	float getRotation() {
 		return sprite->getRotation();
 	}
-	
+
 	void skipFrames(int frameCount) {
 		for (int i = 0; i < frameCount; i++)
 			processMovement();
 	}
-	
+
 	// Actual bullet types will override this. 
 	virtual bool checkPlayerCollision(sf::CircleShape& hitbox) = 0;
 };
@@ -171,11 +171,13 @@ class CircleBullet : virtual public Bullet {
 protected:
 	int hitBoxRadius; // Used for collision detection;
 public:
-	CircleBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0) 
+	CircleBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0, bool useCircleSprite = true)
 		: Bullet(speed, angleDegrees) {
-		sprite = new SfCircleAtHome(WHITE, radius, position, true, color, max(STANDARDCIRCLEOUTLINE, radius / 3.f));
+		if (useCircleSprite) { // Slight optimization. Use false for child classes that don't use the circle
+			sprite = new SfCircleAtHome(WHITE, radius, position, true, color, max(STANDARDCIRCLEOUTLINE, radius / 3.f));
+			sprite->setRotation(angleDegrees);
+		}
 		hitBoxRadius = radius;
-		sprite->setRotation(angleDegrees);
 	}
 	// Circular hitbox compares distance with sum of radius
 	bool checkPlayerCollision(sf::CircleShape& playerHitbox) {
@@ -191,11 +193,11 @@ protected:
 	vector<sf::Shape*> extraSprites;
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		target.draw(*sprite, states);
-		for(sf::Shape* extraSprite : extraSprites)
+		for (sf::Shape* extraSprite : extraSprites)
 			target.draw(*extraSprite, states);
 	}
 public:
-	ComplexBullet() : Bullet(){}
+	ComplexBullet() : Bullet() {}
 	~ComplexBullet() {
 		for (sf::Shape* extraSprite : extraSprites)
 			delete extraSprite;
@@ -203,38 +205,12 @@ public:
 	// Called to move every frame
 	virtual void processMovement() {
 		sprite->move(xVelocity, yVelocity);
-		for (sf::Shape* extraSprite : extraSprites)
-			extraSprite->move(xVelocity, yVelocity);
-	}
-	// Rotate bullet direction
-	virtual void rotateBullet(float angleDegrees) {
-		Bullet::rotateBullet(angleDegrees);
-		for (sf::Shape* extraSprite : extraSprites)
-			extraSprite->rotate(angleDegrees);
-	}
-	void setPosition(sf::Vector2f position) {
-		sprite->setPosition(position);
-		for (sf::Shape* extraSprite : extraSprites)
-			extraSprite->setPosition(position);
-	}
-	void adjustPosition(float x, float y) {
-		sprite->move(x, y);
-		for (sf::Shape* extraSprite : extraSprites)
-			extraSprite->move(x, y);
-	}
-	// Flip the x coordinate (reflection along the y axis)
-	virtual void flipX() {
-		sprite->rotate(-sprite->getRotation() * 2);
-		for (sf::Shape* extraSprite : extraSprites)
-			extraSprite->rotate(-extraSprite->getRotation() * 2);
-		xVelocity *= -1;
-	}
-	// Flip the y coordinate (reflection along the x axis)
-	virtual void flipY() {
-		sprite->rotate(-sprite->getRotation() * 2);
-		for (sf::Shape* extraSprite : extraSprites)
-			extraSprite->rotate(-extraSprite->getRotation() * 2);
-		yVelocity *= -1;
+		for (sf::Shape* extraSprite : extraSprites){
+			// Sync extra sprites with main sprite
+			extraSprite->setRotation(sprite->getRotation());
+			extraSprite->setPosition(sprite->getPosition());
+		}
+	
 	}
 };
 
@@ -293,7 +269,7 @@ public:
 		cir->alignCenter();
 		cir->setPosition(centerPos);
 		currentWidth = targetWidth;
-		if (targetWidth > 0) 
+		if (targetWidth > 0)
 			rect->setOutlineThickness(max(targetWidth / 5, STARTINGLASEROUTLINE));
 		else // No outline if width is zero
 			rect->setOutlineThickness(0);
@@ -301,7 +277,7 @@ public:
 	// Process the active status and growth of laser
 	virtual void processMovement() {
 		frameCounter++;
-		
+
 		// Deactivate laser
 		if (frameCounter / FPS > activationDelay + activeDuration)
 		{
@@ -347,7 +323,7 @@ public:
 	void resetBullet() {
 		frameCounter = 0;
 		currentWidth = 1;
-		rect->setSize({ rect->getSize().x, currentWidth});
+		rect->setSize({ rect->getSize().x, currentWidth });
 		rect->setOutlineThickness(SMALLBULLETOUTLINE);
 		cir->setRadius(2);
 		alignSprite();
@@ -366,16 +342,17 @@ public:
 		sf::Vector2f dist = { hitboxPos.x - centerPos.x, hitboxPos.y - centerPos.y };
 		float mag = sqrt(pow(dist.x, 2) + pow(dist.y, 2));
 		float angle2 = atan2f(dist.y, dist.x);
-		float newX = centerPos.x + (mag) * cos(angle2 - angle);
-		float newY = centerPos.y + (mag) * sin(angle2 - angle);
+		float newX = centerPos.x + (mag)*cos(angle2 - angle);
+		float newY = centerPos.y + (mag)*sin(angle2 - angle);
 		newRec.alignY();
 		newRec.setPosition(centerPos);
 		sf::FloatRect bounds = newRec.getGlobalBounds();
-		
+
 		// Both the hitbox of the rectangle and the circle
 		return bounds.contains(newX, newY) || (sqrt(pow(hitboxPos.x - centerPos.x, 2) + pow(hitboxPos.y - centerPos.y, 2)) <= hitbox.getRadius() + maxWidth / 2);
 	}
 };
+
 
 class RiceBullet : public CircleBullet {
 public:
@@ -397,8 +374,7 @@ public:
 class TalismanBullet : public CircleBullet {
 public:
 	TalismanBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
-		: CircleBullet(position, speed, angleDegrees, color, radius), Bullet(speed, angleDegrees) {
-		delete sprite;
+		: CircleBullet(position, speed, angleDegrees, color, radius, false), Bullet(speed, angleDegrees) {
 		sprite = new SfRectangleAtHome(TRANSPARENTWHITE, { 4.f * radius, 3.f * radius }, position, true, color, STANDARDCIRCLEOUTLINE);
 		sprite->setRotation(angleDegrees);
 	}
@@ -421,8 +397,32 @@ public:
 		sprite->setRotation(angleDegrees);
 	}
 };
+// Arrowhead-shaped bullet
+class ArrowheadBullet : public ComplexBullet, public RiceBullet {
+	int hitBoxRadius;
+public:
+	ArrowheadBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
+		: RiceBullet(position, speed, angleDegrees, WHITE, radius) {
+		hitBoxRadius *= 1.2; // Slightly increase hitbox size
+		for (float i = -1; i <= 1; i += 2)
+		{
+			sf::ConvexShape* arrowPart = new sf::ConvexShape(7);
+			arrowPart->setPoint(0, { -radius * 5.f, 0 });
+			arrowPart->setPoint(1, { -radius * 4.5f, 0 });
+			arrowPart->setPoint(2, { 0, radius * 1.6f * i });
+			arrowPart->setPoint(3, { radius * 3.6f, radius * 1.6f * i });
+			arrowPart->setPoint(4, { radius * 3.6f, radius * 2.5f * i});
+			arrowPart->setPoint(5, { 0, radius * 2.5f * i });
+			arrowPart->setPoint(6, { -radius * 5.f, radius * 0.8f * i, });
+			arrowPart->setFillColor(color);
+			arrowPart->setPosition(position);
+			arrowPart->setRotation(angleDegrees);
+			extraSprites.push_back(arrowPart);
+		}
+	}
+};
 // Special type of bullet that optionally has a hitbox. Used as a transformable sprite to track bullet spawn positions.
-class Spawner : public CircleBullet{
+class Spawner : public CircleBullet {
 	bool visible; // Determines if spawner is visible. Cannot be changed after construction.
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		if (visible)
