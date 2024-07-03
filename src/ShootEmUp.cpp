@@ -61,11 +61,12 @@ int main(){
     manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
     manager.addPattern(new WindGod({ 400, 300 }, 0.3, 4));
     manager.addPattern(new MercuryPoison(32, { 400, 200 }, 3, 2.5));
+    manager.addPattern(new SeamlessCeiling(4, {400, 200}, 2, 4));
     manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
     cursor->rotate(90.f);
-    vector<string> menuText = { "Test", "BOWAP", "QED", "UFO", "GRT", "MOF", "HGP"};
+    vector<string> menuText = { "Test", "BOWAP", "QED", "UFO", "GRT", "MOF", "HGP", "SCOKJ"};
     ClickableMenu danmaku(font, WHITE, menuText, 30, {850, 200}, 30, *cursor);
 
     sfClockAtHome bulletTimer;

@@ -5,7 +5,7 @@
 // Game projectiles
 class Bullet : public sf::Drawable { // Abstract base class
 protected:
-	sf::Shape* sprite; // Base sprite. Faces right by default (rotatfion 0).
+	sf::Shape* sprite; // Base sprite. Faces right by default (rotation 0).
 	char flag; // Flag code that will be used for various purposes
 	float xVelocity, yVelocity;
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -177,7 +177,7 @@ public:
 			sprite = new SfCircleAtHome(WHITE, radius, position, true, color, max(STANDARDCIRCLEOUTLINE, radius / 3.f));
 			sprite->setRotation(angleDegrees);
 		}
-		hitBoxRadius = radius;
+		hitBoxRadius = max(radius - 3, 3); // Make hitbox slightly smaller than its appearance, but keep a minimum size
 	}
 	// Circular hitbox compares distance with sum of radius
 	bool checkPlayerCollision(sf::CircleShape& playerHitbox) {
@@ -210,7 +210,6 @@ public:
 			extraSprite->setRotation(sprite->getRotation());
 			extraSprite->setPosition(sprite->getPosition());
 		}
-	
 	}
 };
 
@@ -360,7 +359,6 @@ public:
 		: CircleBullet(position, speed, angleDegrees, color, radius), Bullet(speed, angleDegrees) {
 		sprite->setOutlineThickness(SMALLBULLETOUTLINE);
 		sprite->scale(2, 1); // Stretch horizonally to look like an ellipse
-		sprite->setRotation(angleDegrees);
 	}
 };
 class DotBullet : public CircleBullet {
@@ -368,13 +366,13 @@ public:
 	DotBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
 		: CircleBullet(position, speed, angleDegrees, color, radius), Bullet(speed, angleDegrees) {
 		sprite->setOutlineThickness(SMALLBULLETOUTLINE);
-		sprite->setRotation(angleDegrees);
 	}
 };
 class TalismanBullet : public CircleBullet {
 public:
 	TalismanBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
 		: CircleBullet(position, speed, angleDegrees, color, radius, false), Bullet(speed, angleDegrees) {
+		// Since this does not use the circle sprite, it generates its own sprite.
 		sprite = new SfRectangleAtHome(TRANSPARENTWHITE, { 4.f * radius, 3.f * radius }, position, true, color, STANDARDCIRCLEOUTLINE);
 		sprite->setRotation(angleDegrees);
 	}
@@ -394,7 +392,6 @@ public:
 		sprite->setOutlineColor(color);
 		extraSprites.push_back(new SfCircleAtHome(TRANSPARENT, radius * 1.3, position, true, copyColor, radius * 0.6));
 		extraSprites.push_back(new SfCircleAtHome(TRANSPARENT, radius * 1.9, position, true, TRANSPARENTWHITE, radius * 0.75));
-		sprite->setRotation(angleDegrees);
 	}
 };
 // Arrowhead-shaped bullet
@@ -402,23 +399,27 @@ class ArrowheadBullet : public ComplexBullet, public RiceBullet {
 	int hitBoxRadius;
 public:
 	ArrowheadBullet(sf::Vector2f position = SCREENPOS, float speed = 0, float angleDegrees = 0, sf::Color color = WHITE, int radius = 0)
-		: RiceBullet(position, speed, angleDegrees, WHITE, radius) {
+		: RiceBullet(position, speed, angleDegrees, WHITE, radius), Bullet(speed, angleDegrees) {
 		hitBoxRadius *= 1.2; // Slightly increase hitbox size
+		// Draw each half of the arrow head
 		for (float i = -1; i <= 1; i += 2)
 		{
 			sf::ConvexShape* arrowPart = new sf::ConvexShape(7);
-			arrowPart->setPoint(0, { -radius * 5.f, 0 });
-			arrowPart->setPoint(1, { -radius * 4.5f, 0 });
+			arrowPart->setPoint(0, { radius * 5.f, 0 });
+			arrowPart->setPoint(1, { radius * 4.5f, 0 });
 			arrowPart->setPoint(2, { 0, radius * 1.6f * i });
-			arrowPart->setPoint(3, { radius * 3.6f, radius * 1.6f * i });
-			arrowPart->setPoint(4, { radius * 3.6f, radius * 2.5f * i});
+			arrowPart->setPoint(3, { -radius * 3.6f, radius * 1.6f * i });
+			arrowPart->setPoint(4, { -radius * 3.6f, radius * 2.5f * i});
 			arrowPart->setPoint(5, { 0, radius * 2.5f * i });
-			arrowPart->setPoint(6, { -radius * 5.f, radius * 0.8f * i, });
+			arrowPart->setPoint(6, { radius * 5.f, radius * 0.8f * i, });
 			arrowPart->setFillColor(color);
 			arrowPart->setPosition(position);
 			arrowPart->setRotation(angleDegrees);
 			extraSprites.push_back(arrowPart);
 		}
+	}
+	virtual void processMovement() {
+		ComplexBullet::processMovement();
 	}
 };
 // Special type of bullet that optionally has a hitbox. Used as a transformable sprite to track bullet spawn positions.

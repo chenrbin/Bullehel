@@ -32,6 +32,8 @@ namespace Constants {
 	const float STANDARDSPAWNERRADIUS = 4;
 	const float STARTINGLASEROUTLINE = 1;
 	const float FINALLASEROUTLINE = 2; // Not used currently
+	const float MINHITBOXSIZE = 3;
+
 	// Object positions
 	const sf::Vector2f SCREENPOS(SCREENLEFT, SCREENTOP);
 	const sf::Vector2f FPSTEXTPOS(SCREENLEFT + SCREENWIDTH - 50, SCREENTOP + SCREENHEIGHT - 50 );
@@ -71,12 +73,12 @@ namespace Constants {
 
 	const sf::Color PLAYERHITBOXCOLOR = RED;
 
-	// Pattern constants
+	// Simple pattern constants
 	// BOWAP
 	const float BOWAP_ANGLEOFFSET = -5, BOWAP_ANGLEVELOCITY = -150, BOWAP_ANGLEACCELERATION = 100; // Time is in seconds
 	// QED 
 	const int QED_VARIANCEX = 400, QED_VARIANCEY = 200; // Length range where bullets can spawn
-
+ 
 	// Bullet flags
 	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
 
@@ -86,7 +88,7 @@ namespace Constants {
 		cout << "Value is: " << var << endl;
 	}
 }
-// Constant values for specific patterns
+// Constant values for specific patterns with a lot of constands
 // Flying Saucer
 namespace UFO {
 	using namespace Constants;
@@ -173,4 +175,12 @@ namespace HGP {
 	// Frame point for rotating bullets
 	const int ROTATIONSTART = 45, ROTATIONEND = 180;
 	const float ROTATIONANGLE = 0.375f;
+}
+
+// Seamless Ceiling
+namespace SCOKJ {
+	const int CEILINGCOUNT = 20, CEILINGDROPDELAY = 60;
+	const float CEILINGBULLETINITIALSPEED = 2.5, CEILINGBULLETSPACING = 0.4;
+	const int VARIANCEX = 80, VARIANCEY = 100;
+
 }
