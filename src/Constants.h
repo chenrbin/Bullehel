@@ -18,7 +18,7 @@ namespace Constants {
 	const int SCREENWIDTH = 720, SCREENHEIGHT = 840, SCREENLEFT = 50, SCREENTOP = 40;
 	const sf::FloatRect SCREENBOUNDS(SCREENLEFT, SCREENTOP, SCREENWIDTH, SCREENHEIGHT);
 	const int BORDERMARGIN = WINDOWWIDTH; // The margin where game objects exist but are not seen. Past this is out of bounds
-	
+
 	// Sprite variables
 	const float STANDARDCIRCLEOUTLINE = 2;
 	const float SMALLBULLETOUTLINE = 0.5;
@@ -36,7 +36,7 @@ namespace Constants {
 
 	// Object positions
 	const sf::Vector2f SCREENPOS(SCREENLEFT, SCREENTOP);
-	const sf::Vector2f FPSTEXTPOS(SCREENLEFT + SCREENWIDTH - 50, SCREENTOP + SCREENHEIGHT - 50 );
+	const sf::Vector2f FPSTEXTPOS(SCREENLEFT + SCREENWIDTH - 50, SCREENTOP + SCREENHEIGHT - 50);
 
 	// Mechanical variables
 	const float PLAYERSTANDARDSPEED = 6, FOCUSSPEEDMODIFIER = 0.5f;
@@ -78,7 +78,7 @@ namespace Constants {
 	const float BOWAP_ANGLEOFFSET = -5, BOWAP_ANGLEVELOCITY = -150, BOWAP_ANGLEACCELERATION = 100; // Time is in seconds
 	// QED 
 	const int QED_VARIANCEX = 400, QED_VARIANCEY = 200; // Length range where bullets can spawn
- 
+
 	// Bullet flags
 	const char NEUTRAL = 0, BOUNCED = 1, REVERSEROTATION = 1, ACTIVESPAWNERHITBOX = 1;
 
@@ -180,7 +180,9 @@ namespace HGP {
 // Seamless Ceiling
 namespace SCOKJ {
 	const int CEILINGCOUNT = 20, CEILINGDROPDELAY = 60;
-	const float CEILINGBULLETINITIALSPEED = 2.5, CEILINGBULLETSPACING = 0.4;
-	const int VARIANCEX = 80, VARIANCEY = 100;
-
+	const float CEILINGBULLETINITIALSPEED = 3, CEILINGBULLETSPACING = 0.35;
+	const int CEILINGVARIANCEX = 80, CEILINGVARIANCEY = 100;
+	const char ISCEILING = 1;
+	const int STREAMVARIANCEXY = 50;
+	const int PHASE1END = 900, PHASE2END = 1800, PHASE3END = 2700; 
 }

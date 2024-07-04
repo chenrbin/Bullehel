@@ -99,9 +99,10 @@ public:
 		screenBounds.width += SCREENWIDTH * 2 * increaseFactor;
 		screenBounds.height += SCREENHEIGHT * 2 * increaseFactor;
 	}
-	// Compares shotFrequency with frameCounter and is used by spawnBullets to determine when to shoot.
+	// Compares frequency (shots per second) with frameCounter and is used by spawnBullets to determine when to shoot.
+	// Uses the shotFrequency attribute by default, but can also supply a custom frequency for a pattern
+	// with multiple types of bullets
 	virtual bool canShoot() {
-		int framesPerShot;
 		if (shotFrequency == 0) {
 			if (!shootOnlyOnce) {
 				shootOnlyOnce = true;
@@ -112,6 +113,17 @@ public:
 		else
 			return frameCounter % int(FPS / shotFrequency) == 0;
 	}
+	// Compares frequency (shots per second) with frameCounter and is used by spawnBullets to determine when to shoot.
+	// Uses the shotFrequency attribute by default, but can also supply a custom frequency for a pattern
+	// with multiple types of bullets
+	virtual bool canShoot(float frequency){
+		return frameCounter % int(FPS / frequency) == 0;
+	}
+	// Generate a random position deviating from the source position
+	sf::Vector2f generateRandomPosition(int varianceX, int varianceY){
+		return { sourcePos.x + rand() % varianceX - varianceX / 2, sourcePos.y + rand() % varianceY - varianceY / 2 };	
+	}
+
 	// All addBullet functions use a source position and polar speed vector
 	void addCircleBullet(sf::Vector2f position, float speed = 0, float angleDegrees = 0, sf::Color color = DEFAULTCIRCLEBULLETCOLOR, int radius = STANDARDCIRCLEBULLETRADIUS) {
 		bullets.push_back(new CircleBullet(position, speed, angleDegrees, color, radius));
@@ -154,6 +166,10 @@ public:
 	// Add wave based on current bullets. Optionally use an argument instead of currentBulletCount
 	void addWave(int bulletCount = 0) {
 		if (bulletCount == 0) {
+			if (currentBulletCount == 0) {
+				print("Empty wave");
+				return;
+			}
 			waveBulletCount.push_back(currentBulletCount);
 			currentBulletCount = 0;
 		}
@@ -185,11 +201,13 @@ public:
 	int getEndIndex(int waveindex) {
 		return getStartIndex(waveindex) + waveBulletCount[waveindex] - 1;
 	}
-	// Increment wave frame timers. Needed for time tracking
+	// Increment wave frame timers. Needed for time tracking.
 	void incrementWaveFrames() {
 		for (int& counter : waveFrameCount)
 			counter++;
 	}
+	// Must call this after each bullet spawn if using addWave() without arguments,
+	// such as spawning a wave across a period of multiple frames.
 	void incrementCurrentBulletCount() {
 		currentBulletCount++;
 	}
@@ -273,7 +291,7 @@ public:
 			int shotAngle = rand() % 360;
 			sf::Vector2f shotSource;
 			if (frameCounter != 0)
-				shotSource = { sourcePos.x + rand() % QED_VARIANCEX - QED_VARIANCEX / 2, sourcePos.y + rand() % QED_VARIANCEY - QED_VARIANCEY / 2 };
+				shotSource = generateRandomPosition(QED_VARIANCEX, QED_VARIANCEY);
 			else // Fixed position for first shot
 				shotSource = sourcePos;
 			for (int i = 0; i < streamCount; i++)
@@ -714,6 +732,8 @@ class SeamlessCeiling : public WavePattern {
 public:
 	SeamlessCeiling(int streamCount, sf::Vector2f sourcePos, float shotFrequency, float baseSpeed)
 		:WavePattern(streamCount, shotFrequency, baseSpeed, sourcePos) {
+		// Shot frequency determines frequency of ceiling
+		// StreamCount determines density of stream
 		expandBounds(0.1);
 		ceilingAlternate = true;
 	}
@@ -721,13 +741,45 @@ public:
 	void spawnBullets() {
 		using namespace SCOKJ;
 		if (canShoot()) {
-			sf::Vector2f shotSource = { sourcePos.x + rand() % VARIANCEX - VARIANCEX / 2, sourcePos.y + rand() % VARIANCEY - VARIANCEY / 2 };
+			// Each ceiling is a wave. All stream bullets between ceilings is a wave. 
+			addWave();
+			sf::Vector2f ceilingSource = generateRandomPosition(CEILINGVARIANCEX, CEILINGVARIANCEY);
 			int direction = (ceilingAlternate) ? 180 : 0; // Left or right
 			for (int i = 0; i < CEILINGCOUNT; i++) {
-				addCircleBullet(shotSource, (i + CEILINGBULLETINITIALSPEED) * CEILINGBULLETSPACING, direction, YELLOW, 8);
+				addCircleBullet(ceilingSource, (i + CEILINGBULLETINITIALSPEED) * CEILINGBULLETSPACING, direction, YELLOW, 7);
 			}
 			addWave(CEILINGCOUNT);
+			// Set flag to be dropped
+			for (int i = bullets.size() - CEILINGCOUNT; i < bullets.size(); i++)
+				bullets[i]->setFlag(ISCEILING);
 			ceilingAlternate = !ceilingAlternate;
+		}
+		// Spiral stream
+		// Each stream has its own color, speed, and spiral rotation speed
+		if (canShoot(shotFrequency * 14)){
+			sf::Vector2f streamSource = generateRandomPosition(STREAMVARIANCEXY, STREAMVARIANCEXY);
+			for (int i = 0; i < 4; i++) {
+				addCircleBullet(streamSource, baseSpeed, frameCounter * 0.8 + i * 90, GREEN, 7);
+				incrementCurrentBulletCount();
+			}
+			if (frameCounter > PHASE1END)
+				for (int i = 0; i < 4; i++) {
+					addCircleBullet(streamSource, baseSpeed * 1.2, 20 - frameCounter + i * 90, CYAN, 7);
+					incrementCurrentBulletCount();
+				}
+		}
+		if (canShoot(shotFrequency * 14)){
+			sf::Vector2f streamSource = generateRandomPosition(STREAMVARIANCEXY, STREAMVARIANCEXY);
+			if (frameCounter > PHASE2END)
+				for (int i = 0; i < 4; i++){
+					addCircleBullet(streamSource, baseSpeed, 40 + frameCounter * 1.6 + i * 90, BLUE, 7);
+					incrementCurrentBulletCount();
+				}
+			if (frameCounter > PHASE3END)
+				for (int i = 0; i < 4; i++) {
+					addCircleBullet(streamSource, baseSpeed * 1.1, 60 - frameCounter * 2 + i * 90, MAGENTA, 7);
+					incrementCurrentBulletCount();
+				}
 		}
 	}
 	void processMovement() {
@@ -736,10 +788,16 @@ public:
 			bullet->processMovement();
 		incrementWaveFrames();
 		for (int wave = 0; wave < waveBulletCount.size(); wave++) {
+			// Check that the wave is a ceiling wave
+			int startIndex = getStartIndex(wave);
+			if (bullets[startIndex]->getFlag() != ISCEILING)
+				continue;
+			int endIndex = getEndIndex(wave);
+
 			int frameCount = waveFrameCount[wave];
 			// Ceiling starts going down
 			if (frameCount == CEILINGDROPDELAY)
-				for (int j = getStartIndex(wave); j <= getEndIndex(wave); j++) {
+				for (int j = startIndex; j <= endIndex; j++) {
 					Bullet* bullet = bullets[j];
 					bullet->setVelocity(0, 2);
 				}
@@ -747,8 +805,8 @@ public:
 			else if (frameCount > CEILINGDROPDELAY * 0.75f && frameCount < CEILINGDROPDELAY) {
 				// Calculate the initial speed for each bullet
 				float bulletSpeed = CEILINGBULLETINITIALSPEED * CEILINGBULLETSPACING;
-				int direction = (bullets[getStartIndex(wave)]->getVelocity().x < 0) ? -1 : 1;
-				for (int j = getStartIndex(wave); j <= getEndIndex(wave); j++) {
+				int direction = (bullets[startIndex]->getVelocity().x < 0) ? -1 : 1;
+				for (int j = startIndex; j <= endIndex; j++) {
 					Bullet* bullet = bullets[j];
 					bullet->adjustVelocity(-bulletSpeed * 4 * direction / CEILINGDROPDELAY, 0);
 					bulletSpeed += CEILINGBULLETSPACING;
