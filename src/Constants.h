@@ -11,6 +11,7 @@ namespace Constants {
 
 	// File paths
 	const string PLAYERTEXTUREFILEPATH = "assets/reimoo.png";
+	const string ENEMYTEXTUREFILEPATH = "assets/freddy.png";
 	const string FONTFILEPATH = "assets/font.ttf";
 
 	// Size and dimensions
@@ -23,6 +24,8 @@ namespace Constants {
 	const float STANDARDCIRCLEOUTLINE = 2;
 	const float SMALLBULLETOUTLINE = 0.5;
 	const float PLAYERHITBOXRADIUS = 4;
+	const float ENEMYHITBOXRADIUS = 10;
+
 	const float STANDARDCIRCLEBULLETRADIUS = 6;
 	const float STANDARDRICEBULLETRADIUS = 4;
 	const float STANDARDDOTBULLETRADIUS = 4;

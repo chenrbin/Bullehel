@@ -219,25 +219,3 @@ public:
 		text.setString(str);
 	}
 };
-
-// Organize drawable rectangle elements
-class BorderRects {
-	SfRectangleAtHome background;
-	SfRectangleAtHome border1;
-	SfRectangleAtHome border2;
-public:
-	BorderRects() {
-		background = SfRectangleAtHome(GRAY, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP });
-		border1 = SfRectangleAtHome(TRANSPARENT, { SCREENWIDTH, SCREENHEIGHT }, { SCREENLEFT, SCREENTOP }, false, WHITE, 1);
-		border2 = SfRectangleAtHome(TRANSPARENT, { SCREENWIDTH + 2, SCREENHEIGHT + 2 }, { SCREENLEFT - 1, SCREENTOP - 1 }, false, BLACK, BORDERMARGIN);
-	}
-	SfRectangleAtHome& getBackground() {
-		return background;
-	}
-	SfRectangleAtHome& getBorder1() {
-		return border1;
-	}
-	SfRectangleAtHome& getBorder2() {
-		return border2;
-	}
-};

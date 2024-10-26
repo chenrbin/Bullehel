@@ -6,7 +6,7 @@ using namespace Constants;
 class Player : public sf::Drawable {
 	SfCircleAtHome hitbox; // Actual hitbox is invisible and slightly smaller.
 	sf::Sprite playerSprite;
-	sf::FloatRect movementBounds;
+	sf::FloatRect movementBounds; // Boundary limits for the player's movement
 	float moveSpeed, hitboxRadius;
 	bool focused;
 
@@ -41,8 +41,8 @@ public:
 			hitbox.setPosition(getPosition().x, movementBounds.top + movementBounds.height);
 		playerSprite.setPosition(hitbox.getPosition());
 	}
-	// Check where to move based on current keyboard presses
-	void checkMovement(){
+	// Process key controls, such as movement and shooting
+	void onKeyPress(){
 		sf::Vector2f nextMove(0, 0);
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 			nextMove.x -= moveSpeed;
@@ -54,6 +54,10 @@ public:
 			nextMove.y -= moveSpeed;
 		if (nextMove.x != 0 && nextMove.y != 0)
 			nextMove *= float(sqrt(2) / 2);
+		
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) {
+			shoot();
+		}
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
 			focused = true;
 			nextMove *= FOCUSSPEEDMODIFIER;
@@ -61,6 +65,9 @@ public:
 		else focused = false;
 		if (nextMove != sf::Vector2f{0, 0})
 			move(nextMove);
+	}
+	void shoot(){
+		cout << "pew\n";
 	}
 	sf::Vector2f getPosition() {
 		return hitbox.getPosition();
@@ -80,5 +87,30 @@ public:
 	}
 	bool getFocused() {
 		return focused;
+	}
+};
+
+class Enemy : public sf::Drawable {
+	sf::Sprite sprite;
+	sf::FloatRect movementBounds;
+	float hitboxRadius;
+	float hitpoint;
+
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+		target.draw(sprite, states);
+	}
+public:
+	Enemy() {
+		hitboxRadius = 0;
+		hitpoint = 0;
+	};
+	Enemy(float hitboxRadius, float hitpoint, sf::Texture& texture) {
+		this->hitboxRadius = hitboxRadius;
+		this->hitpoint = hitpoint;
+		sprite.setTexture(texture);
+		sprite.setScale(0.6, 0.6);
+		sprite.setPosition(400 , 100);
+		sf::FloatRect bound = sprite.getLocalBounds();
+		sprite.setOrigin(bound.width / 2, bound.height / 2);
 	}
 };

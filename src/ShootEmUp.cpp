@@ -24,17 +24,27 @@ void addTestBullets(Pattern* generalBullets) {
     generalBullets->addTalismanBullet({ 500, 400 }, 0, 90);
     generalBullets->addBubbleBullet({ 550, 400 }, 0, 0);
     generalBullets->addLaser({ 400, 200 }, 0, 10, 20, 0.25, 99, BLUE);
-    generalBullets->addArrowheadBullet({400, 500}, 0, 90, ORANGE, 10);
+    generalBullets->addArrowheadBullet({600, 400}, 0, 90);
     generalBullets->addSpawner({ 300, 400 }, 0, 0, true);
 }
 int main(){
     srand(time(NULL));
+    // Load sprite textures
     sf::Texture playerTexture;
-    if (!playerTexture.loadFromFile(PLAYERTEXTUREFILEPATH))
+    if (!playerTexture.loadFromFile(PLAYERTEXTUREFILEPATH)) {
+        cout << "Failed to load player texture file\n";
         return -1;
+    }
+    sf::Texture enemyTexture;
+    if (!enemyTexture.loadFromFile(ENEMYTEXTUREFILEPATH)) {
+        cout << "Failed to load enemy texture file\n";
+        return -1;
+    }
     sf::Font font;
-    if (!font.loadFromFile(FONTFILEPATH))
+    if (!font.loadFromFile(FONTFILEPATH)) {
+        cout << "Failed to load font file\n";
         return -1;
+    }
     sf::ContextSettings windowSettings;
     windowSettings.antialiasingLevel = 8;
     sf::RenderWindow window(sf::VideoMode(1600, 900), "ShootEmUp", sf::Style::Close | sf::Style::Titlebar, windowSettings);
@@ -44,10 +54,8 @@ int main(){
     SfTextAtHome hitText(font, WHITE, "Pichuun", 40, { 1000, 500 }, true, false, true, true);
     FadeText hitFade(hitText, 0, 1);
 
-    Player reimoo(PLAYERSTANDARDSPEED, PLAYERHITBOXRADIUS, playerTexture);
-    BorderRects borderRects;
     PatternManager manager;
-    GameScreen gameScreen(&reimoo, &borderRects, &manager, &hitFade);
+    GameScreen gameScreen(&manager, &hitFade, playerTexture, enemyTexture);
 
     sfClockAtHome fpsTimer;
     int fpsCounter = 0;
@@ -55,13 +63,13 @@ int main(){
     addTestBullets(generalBullets);
 
     manager.addPattern(generalBullets);
-    manager.addPattern(new Bowap(5, 150, -100, 8, { 400, 400 }, 30, 6));
-    manager.addPattern(new QedRipples(80, { 400, 200 }, 0.75, 3)); // 80
-    manager.addPattern(new FlyingSaucer(40, { 400, 250 }, 0.35, 2));
-    manager.addPattern(new GengetsuTime(48, { 400, 200 }, 10, 10));
+    manager.addPattern(new Bowap({ 400, 400 }, 8, 30, 6));
+    manager.addPattern(new QedRipples({ 400, 200 }, 80, 0.75, 3));
+    manager.addPattern(new FlyingSaucer({ 400, 250 }, 40, 0.35, 2));
+    manager.addPattern(new GengetsuTime({ 400, 200 }, 48, 10, 10));
     manager.addPattern(new WindGod({ 400, 300 }, 0.3, 4));
-    manager.addPattern(new MercuryPoison(32, { 400, 200 }, 3, 2.5));
-    manager.addPattern(new SeamlessCeiling(4, {400, 200}, 2, 3));
+    manager.addPattern(new MercuryPoison({ 400, 200 }, 32, 3, 2.5));
+    manager.addPattern(new SeamlessCeiling({ 400, 200 }, 4, 2, 3));
     manager.deactivateAllPatterns();
 
     sf::CircleShape* cursor = new sf::CircleShape(15.f, 3); // Triangle shaped cursor
@@ -81,7 +89,7 @@ int main(){
             fpsCounter = 0;
         }
         fpsCounter++;
-        gameScreen.doStuff();
+        gameScreen.update();
         sf::Event event;
         bool menuClicked = false;
         while (window.pollEvent(event))

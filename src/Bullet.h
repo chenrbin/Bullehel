@@ -92,9 +92,10 @@ public:
 		sprite->setPosition(x, y);
 	}
 	// Adjust position of a bullet rotating in an arc such that its origin point remains the same
-	virtual void alignArc(float deltaRadius) {
-		float angleDelta = (sprite->getRotation() - 90) / 180 * PI;
-		adjustPosition(deltaRadius * cos(angleDelta), deltaRadius * sin(angleDelta));
+	virtual void alignArc(float deltaRadius, bool clockwise) {
+		// Calculate the angle to the rotation pivot
+		float angleToOrigin = (clockwise) ? (sprite->getRotation() - 90) / 180 * PI : (sprite->getRotation() + 90) / 180 * PI;
+		adjustPosition(deltaRadius * cos(angleToOrigin), deltaRadius * sin(angleToOrigin));
 	}
 	// Sets velocity. Polar version will be used more often
 	virtual void setVelocity(float x, float y) {
